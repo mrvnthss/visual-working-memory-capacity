@@ -127,4 +127,10 @@ Config.xCenter = floor(Config.widthPixels / 2);    % in pixels
 Config.yCenter = floor(Config.heightPixels / 2);   % in pixels
 Config.center = [Config.xCenter, Config.yCenter];  % in pixels
 
+% Compute pixels per mm
+% NOTE: Theoretically, the two ratios we compute below should be identical.
+% In practice, they're not. So we simply take the mean of the two.
+Config.pixelsPerMM = mean([Config.widthPixels / Config.widthMM, ...
+                    Config.heightPixels / Config.heightMM]);
+
 end

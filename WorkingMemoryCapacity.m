@@ -177,18 +177,30 @@ Msg.errorExptAborted = ['The participant has ended the experiment ' ...
 % Define background color
 % NOTE: Vogel & Machizawa (2004) used a gray background with a luminance of
 % 8.2 cd/m^2
-Color.background = 0.5;
+backgroundColor = 0.5;
+
+% Use black as text color for instructions
+textColor = 0;
 
 % Define colors used for the squares
+nColors = 7;
+colorArray = cell(nColors, 1);
+
 % NOTE: Qualitatively, these colors are the ones used by Vogel & Machizawa
 % (2004).
-Color.red = [1, 0, 0];
-Color.blue = [0, 0, 1];
-Color.violet = [0.561, 0, 1];
-Color.green = [0, 1, 0];
-Color.yellow = [1, 1, 0];
-Color.black = [0, 0, 0];
-Color.white = [1, 1, 1];
+colorArray{1} = [1, 0, 0];      % red
+colorArray{2} = [0, 0, 1];      % blue
+colorArray{3} = [0.561, 0, 1];  % violet
+colorArray{4} = [0, 1, 0];      % green
+colorArray{5} = [1, 1, 0];      % yellow
+colorArray{6} = [0, 0, 0];      % black
+colorArray{7} = [1, 1, 1];      % white
+
+% Store color names for analysis
+colorNames = ["red", "blue", "violet", "green", "yellow", "black", "white"];
+
+% Clean up workspace
+clear nColors
 
 
 %------------------------------------------------------------------
@@ -202,9 +214,9 @@ Color.white = [1, 1, 1];
 
 % Set up a table that stores all information needed to control/conduct the
 % experiment.  We also use this table to store the participant's responses.
-varNames = ["Hemifield", "IdenticalArrays"];
+varNames = ["Hemifield", "IdenticalArrays", "Colors", "ColorNames"];
 
-varTypes = ["string", "logical"];
+varTypes = ["string", "logical", "double", "string"];
 
 % Preallocate table
 trials = table('Size', [nTrials, length(varNames)], ...
@@ -284,18 +296,18 @@ try
     ListenChar(2);
 
     % Open new PTB window with gray background
-    [window, windowRect] = PsychImaging( ...
-        'OpenWindow', Config.screenNumber, Color.background, Config.winRect);
+    [windowPtr, windowRect] = PsychImaging( ...
+        'OpenWindow', Config.screenNumber, backgroundColor, Config.winRect);
 
     % Hide cursor
     HideCursor(Config.screenNumber);
 
     % Set text size & font
-    Screen('TextSize', window, txtSize);
-    Screen('TextFont', window, txtFont);
+    Screen('TextSize', windowPtr, txtSize);
+    Screen('TextFont', windowPtr, txtFont);
 
     % Enable antialiasing
-    Screen('BlendFunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    Screen('BlendFunction', windowPtr, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
 %------------------------------------------------------------------
@@ -303,10 +315,10 @@ try
 %------------------------------------------------------------------
 
     % Query frame duration
-    Config.ifi = Screen('GetFlipInterval', window);
+    Config.ifi = Screen('GetFlipInterval', windowPtr);
 
     % Set priority to maximum priority
-    Priority(MaxPriority(window));
+    Priority(MaxPriority(windowPtr));
 
     % Convert all presentation durations from seconds to number of frames
     Duration.stimOnsetAsyncMinFrames = round( ...
@@ -336,9 +348,12 @@ try
     Progress.stepArray = Progress.stepArray(2:end);
 
     % Present general instructions to participant
-    DrawFormattedText(window, Msg.instructions, ...
-        'center', 'center', Color.black);
-    Screen('Flip', window);
+    DrawFormattedText(windowPtr, Msg.instructions, ...
+        'center', 'center', textColor);
+    Screen('Flip', windowPtr);
+
+    % Increase text size by 50 % for rest of experiment
+    Screen('TextSize', windowPtr, 1.5 * txtSize);
 
     % Wait for participant to press the space bar to start the first trial
     KbReleaseWait(Config.keyboard);
@@ -363,10 +378,10 @@ try
             Progress.completed = round((iTrial - 1) / nTrials * 100);  % in pct
 
             % Display progress to participant
-            DrawFormattedText(window, ...
+            DrawFormattedText(windowPtr, ...
                 sprintf(Msg.progress, Progress.completed), ...
-                'center', 'center', Color.black)
-            Screen('Flip', window);
+                'center', 'center', textColor)
+            Screen('Flip', windowPtr);
 
             % Wait for participant to press the space bar to start the
             % next block of trials
@@ -389,22 +404,23 @@ try
 %----------------------------------------------------------------------
 
     % Wipe screen
-    Screen('Flip', window);
+    Screen('Flip', windowPtr);
     WaitSecs(0.5);
 
     % Present thank-you-message to participant
     for secs = 10:-1:1
-        DrawFormattedText(window, sprintf(Msg.thankYou, secs), ...
-            'center', 'center', Color.black);
-        Screen('Flip', window);
+        DrawFormattedText(windowPtr, sprintf(Msg.thankYou, secs), ...
+            'center', 'center', textColor);
+        Screen('Flip', windowPtr);
         WaitSecs(1);
     end
 
     % Wipe screen again before shutting down
-    Screen('Flip', window);
+    Screen('Flip', windowPtr);
+    WaitSecs(0.5);
 
     % Clean up workspace
-    clear ans
+    clear ans secs
 
 
 %------------------------------------------------------------------
@@ -429,7 +445,7 @@ catch errorMessage
     writetable(trials, filename, 'Delimiter', ',');
 
     % Clean up workspace
-    clear ans iTrial keyCode nTrials
+    clear ans iTrial keyCode nTrials secs
 
     % Turn off character listening, re-enable keyboard input and close all
     % open screens

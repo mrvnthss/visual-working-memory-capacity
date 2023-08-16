@@ -4,22 +4,22 @@ function objSizeMM = visualAngleToSize(visualAngle, viewingDistanceMM, ...
 
 % VISUALANGLETOSIZE - Convert degrees of visual angle to size in mm
 %    This MATLAB function converts visual angle in degrees to size of the
-%    viewed object in mm. Can be used for objects centered on the screen as
-%    well as objects presented only on one half of the screen. Objects that
-%    are offset from the center of the screen can be handled as well.
+%    viewed object in mm.  Can be used for objects centered on the screen
+%    as well as objects presented only on one half of the screen.  Objects
+%    that are offset from the center of the screen can be handled as well.
 %
 %    INPUT ARGUMENTS
 %      visualAngle (double) - The visual angle of the viewed object in
-%                             degrees. Must be positive and less than 180.
+%                             degrees.  Must be positive and less than 180.
 %                             Must be less than 90 if 'mode' is set to
 %                             "oneSided".
 %
 %      viewingDistanceMM (double) - The (orthogonal) distance from eye to
-%                                   screen in mm. Must be positive.
+%                                   screen in mm.  Must be positive.
 %
 %      offsetMM (double) - The distance from screen center to target in mm.
-%                          Must be non-negative. Must be 0 if 'mode' is set
-%                          to "centered".
+%                          Must be non-negative.  Must be 0 if 'mode' is
+%                          set to "centered".
 %
 %      mode (string) - Either "centered" or "oneSided".
 %

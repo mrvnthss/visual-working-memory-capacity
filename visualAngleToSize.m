@@ -80,19 +80,20 @@ if ~(isSameLength || isSingleton)
         ' or input size must be 1x1.'];
     throwAsCaller(MException(eidType, msgType))
 end
+
 end
 
 
 % NOTE: The function 'mustBeValidCombo' is only supposed to be used for the
 % 'mode', 'visualAngle', and 'offsetMM' arguments passed to the
-% 'visualAngleToSize' function! Whenever 'mode' is set to "centered",
-% 'offsetMM' must equal 0! If 'mode' is "oneSided", 'visualAngle' must be
+% 'visualAngleToSize' function!  Whenever 'mode' is set to "centered",
+% 'offsetMM' must equal 0!  If 'mode' is "oneSided", 'visualAngle' must be
 % less than 90.
 function mustBeValidCombo(mode, visualAngle, offsetMM)
 % MUSTBEVALIDCOMBO - Ensure compatibility of arguments
 
 % NOTE: We know that all arguments are either of the same length or of size
-% 1x1. We now make sure that they are actually the same length, b/c we'll
+% 1x1.  We now make sure that they are actually the same length, b/c we'll
 % need this later.
 commonLength = max([length(mode), length(visualAngle), length(offsetMM)]);
 

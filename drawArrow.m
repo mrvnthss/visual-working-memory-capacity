@@ -63,8 +63,8 @@ arrShaftCoords = [-halfArrLength, halfArrLength; 0, 0];
 vertDisplacement = sind(angle) .* arrHeadLength;
 hrzDisplacement = halfArrLength - cosd(angle).*arrHeadLength;
 
-% NOTE: We compute the x-coordinates for an arrow pointing to the right. If
-% 'direction' is set to "left", we simply flip the sign of these
+% NOTE: We compute the x-coordinates for an arrow pointing to the right.
+% If 'direction' is set to "left", we simply flip the sign of these
 % coordinates afterwards.
 xCoordsArrHead = [halfArrLength, hrzDisplacement, ...
     halfArrLength, hrzDisplacement];

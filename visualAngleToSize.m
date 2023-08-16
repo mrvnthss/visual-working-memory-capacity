@@ -19,9 +19,11 @@ function objSizeMM = visualAngleToSize(visualAngle, viewingDistanceMM, ...
 %
 %      offsetMM (double) - The distance from screen center to target in mm.
 %                          Must be non-negative.  Must be 0 if 'mode' is
-%                          set to "centered".
+%                          set to "centered".  Defaults to 0 if not
+%                          specified.
 %
-%      mode (string) - Either "centered" or "oneSided".
+%      mode (string) - Either "centered" or "oneSided".  Defaults to
+%                      "centered" if not specified.
 %
 %    OUTPUT
 %      objSizeMM (double) - The size of the viewed target in mm.
@@ -38,13 +40,13 @@ arguments
     offsetMM (1, :) double { ...
         mustBeGreaterThanOrEqual(offsetMM, 0), ...
         mustBeEqualLength(offsetMM, visualAngle), ...
-        mustBeEqualLength(offsetMM, viewingDistanceMM)}
+        mustBeEqualLength(offsetMM, viewingDistanceMM)} = 0
     mode (1, :) string { ...
         mustBeMember(mode, ["centered", "oneSided"]), ...
         mustBeEqualLength(mode, visualAngle), ...
         mustBeEqualLength(mode, viewingDistanceMM), ...
         mustBeEqualLength(mode, offsetMM), ...
-        mustBeValidCombo(mode, visualAngle, offsetMM)}
+        mustBeValidCombo(mode, visualAngle, offsetMM)} = "centered"
 end
 
 % Additional factor that's needed to compute object size in the "centered"

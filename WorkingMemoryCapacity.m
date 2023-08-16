@@ -66,6 +66,9 @@ nSquares = 4;
 % NOTE: Vogel & Machizawa (2004) conducted 240 trials per condition
 nTrials = 240;
 
+% (Orthogonal) distance from eye to screen in mm
+viewingDistanceMM = 900;  % in mm
+
 % 'Progress.thresholdPct' can be modified to control how often the
 % participant is informed about his/her progress
 % EXAMPLE: By setting 'Progress.thresholdPct' to 20, the participant is
@@ -88,11 +91,12 @@ Duration.memoryArraySecs = 0.1;        % in secs
 Duration.retentionIntervalSecs = 0.9;  % in secs
 Duration.testArraySecs = 2;            % in secs
 
-% Set text size and font
+% Set text size, font, and color
 % NOTE: This script was developed on a 16" laptop.  For laptops of
 % different sizes, 'txtSize' will most likely need some adjustment.
 txtSize = 40;
 txtFont = 'Helvetica';
+txtColor = 0;
 
 % If the PTB window is opened in 'debugMode' (i.e., the window only covers
 % 25 % of the screen), we scale down the text size accordingly
@@ -150,10 +154,10 @@ Msg.errorNoInput = ['No participant information was entered into the ' ...
 Msg.errorInvalidID = ['Participant ID is not valid, expected an ' ...
     'integer between 1 and 999!'];
 
-% Error message that is printed to the command window if an invalid gender
+% Error message that is printed to the command window if an invalid sex
 % was entered into the dialog box that is opened at the beginning of the
 % experiment
-Msg.errorInvalidGender = ['Participant gender is not valid, expected ' ...
+Msg.errorInvalidSex = ['Participant sex is not valid, expected ' ...
     'one of m, w, d!'];
 
 % Error message that is printed to the command window if an invalid
@@ -179,9 +183,6 @@ Msg.errorExptAborted = ['The participant has ended the experiment ' ...
 % 8.2 cd/m^2
 backgroundColor = 0.5;
 
-% Use black as text color for instructions
-textColor = 0;
-
 % Define colors used for the squares
 nColors = 7;
 colorArray = cell(nColors, 1);
@@ -196,34 +197,104 @@ colorArray{5} = [1, 1, 0];      % yellow
 colorArray{6} = [0, 0, 0];      % black
 colorArray{7} = [1, 1, 1];      % white
 
-% Store color names for analysis
-colorNames = ["red", "blue", "violet", "green", "yellow", "black", "white"];
+% Store color names for analysis purposes
+colorNames = ["red"; "blue"; "violet"; "green"; ...
+    "yellow"; "black"; "white"];
+
+
+%------------------------------------------------------------------
+%       POSITIONING AND SIZE OF FIXATION CROSS & ARROW
+%------------------------------------------------------------------
+
+% TODO: Set length and center based on degrees of visual angle
+Arrow.length = 200;                           % in pixels
+Arrow.headLength = floor(Arrow.length ./ 3);  % in pixels
+Arrow.width = 5;                              % in pixels
+Arrow.angle = 40;                             % in degrees
+Arrow.center = Config.center - [0, 100];      % in pixels
+
+
+%------------------------------------------------------------------
+%       TRIAL STRUCTURE & SETUP
+%------------------------------------------------------------------
+
+% NOTE: 'Order' will be used to randomize the order of trials
+Order = randperm(nTrials)';
+
+% Randomize stimulus onset asynchrony
+StimOnsetAsyncSecs = Duration.stimOnsetAsyncMinSecs + ( ...
+    Duration.stimOnsetAsyncMaxSecs - Duration.stimOnsetAsyncMinSecs ...
+    ) .* rand(nTrials, 1);
+
+% Little helper variable to set up trial conditions
+quartiles = floor(quantile(1:nTrials, [0.25, 0.5, 0.75]));
+
+% In half of the trials, participants will have to remember the squares in
+% the left hemisphere.  In the other half of the trials, they will have to
+% remember the squares in the right hemisphere.
+Hemifield = strings(nTrials, 1);
+Hemifield(1:quartiles(2)) = "left";
+Hemifield(quartiles(2)+1:end) = "right";
+
+% In each of the two conditions (left hemifield vs. right hemifield), the
+% memory array will be identical in exactly half of all trials of that
+% condition.
+IdenticalArrays = true(nTrials, 1);
+IdenticalArrays( ...
+    [quartiles(1)+1:quartiles(2), quartiles(3)+1:end] ...
+    ) = false;
+
+% For each trial, we randomly choose the squares' colors from the 7 colors
+% specified in the 'colorArray' cell array.
+% NOTE: Following Vogel & Machizawa (2004), we let no color appear more
+% than twice in a single memory array.
+ColorsLeft = NaN(nTrials, nSquares);   % array colors (left hemifield)
+ColorsRight = NaN(nTrials, nSquares);  % array colors (right hemifield)
+colorCodes = repelem(1:nColors, 2);    % colors to choose from
+for iTrial = 1:nTrials
+    % Memory array for left hemisphere
+    selectedColors = randperm(length(colorCodes), nSquares);
+    ColorsLeft(iTrial, :) = colorCodes(selectedColors);
+
+    % Memory array for right hemisphere
+    selectedColors = randperm(length(colorCodes), nSquares);
+    ColorsRight(iTrial, :) = colorCodes(selectedColors);
+end
+
+% For those trials in which memory and test array do not match, we randomly
+% select a square that changes color.
+OddSquare = randi(nSquares, nTrials, 1);
+OddSquare(IdenticalArrays) = NaN;
+
+% Select the color that the square changes to in non-identical trials
+OddColor = NaN(nTrials, 1);
+for iTrial = 1:nTrials
+    % Only select an odd color in non-identical trials
+    if ~IdenticalArrays(iTrial)
+        % Get initial color of square that ought to change color
+        if strcmp(Hemifield(iTrial), "left")
+            initColor = ColorsLeft(iTrial, OddSquare(iTrial));
+        else
+            initColor = ColorsRight(iTrial, OddSquare(iTrial));
+        end
+
+        % Select a new color at random
+        possibleColors = colorCodes(colorCodes ~= initColor);
+        OddColor(iTrial) = possibleColors(randi(length(possibleColors)));
+    end
+end
+
+% Combine all variables into a single table
+trials = table(Order, StimOnsetAsyncSecs, Hemifield, IdenticalArrays, ...
+    ColorsLeft, ColorsRight, OddSquare, OddColor);
+
+% Randomize order of trials
+trials = sortrows(trials, 'Order');
 
 % Clean up workspace
-clear nColors
-
-
-%------------------------------------------------------------------
-%       POSITIONING OF SQUARES, FIXATION CROSS & ARROW
-%------------------------------------------------------------------
-
-
-%------------------------------------------------------------------
-%       TRIAL STRUCTURE
-%------------------------------------------------------------------
-
-% Set up a table that stores all information needed to control/conduct the
-% experiment.  We also use this table to store the participant's responses.
-varNames = ["Hemifield", "IdenticalArrays", "Colors", "ColorNames"];
-
-varTypes = ["string", "logical", "double", "string"];
-
-% Preallocate table
-trials = table('Size', [nTrials, length(varNames)], ...
-    'VariableTypes', varTypes, 'VariableNames', varNames);
-
-% Clean up workspace
-clear varNames varTypes
+clear colorCodes ColorsLeft ColorsRight Hemifield IdenticalArrays ...
+    initColor nColors OddSquare Order possibleColors quartiles ...
+    selectedColors StimOnsetAsyncSecs
 
 
 %----------------------------------------------------------------------
@@ -232,7 +303,7 @@ clear varNames varTypes
 
 % Record some basic data of our participant using a dialog box
 prompt = {'Participant ID (1 - 999):', ...
-    'Please enter your gender (m/w/d):', ...
+    'Please enter your sex (m/w/d):', ...
     'Please enter your age:'};
 dlgtitle = 'Participant Data';
 dims = [1, 40];
@@ -245,7 +316,7 @@ end
 
 % Store input in struct 'Participant'
 Participant.id = str2double(answer{1});
-Participant.gender = answer{2};
+Participant.sex = answer{2};
 Participant.age = str2double(answer{3});
 
 % Ensure that the data provided by the participant is valid
@@ -254,9 +325,9 @@ assert(isnumeric(Participant.id) && isreal(Participant.id) && ...
     isfinite(Participant.id) && mod(Participant.id, 1) == 0 && ...
     1 <= Participant.id && Participant.id <= 999, Msg.errorInvalidID);
 
-%   b) Check participant gender (expected to be one of 'm', 'w', 'd')
-assert(ismember(Participant.gender, {'m', 'w', 'd'}), ...
-    Msg.errorInvalidGender);
+%   b) Check participant sex (expected to be one of 'm', 'w', 'd')
+assert(ismember(Participant.sex, {'m', 'w', 'd'}), ...
+    Msg.errorInvalidSex);
 
 %   c) Check participant age (expected to be positive integer)
 assert(isnumeric(Participant.age) && isreal(Participant.age) && ...
@@ -268,7 +339,7 @@ assert(isnumeric(Participant.age) && isreal(Participant.age) && ...
 Participant.id = sprintf('%03d', Participant.id);
 t = datetime("now", "Format", "MM-dd-yyyy_HHmm");
 filename = upper( ...
-    [Participant.id, '_', Participant.gender, num2str(Participant.age), ...
+    [Participant.id, '_', Participant.sex, num2str(Participant.age), ...
     '_', char(t)]);
 filename = fullfile('data', [filename, '.csv']);
 
@@ -296,8 +367,8 @@ try
     ListenChar(2);
 
     % Open new PTB window with gray background
-    [windowPtr, windowRect] = PsychImaging( ...
-        'OpenWindow', Config.screenNumber, backgroundColor, Config.winRect);
+    [windowPtr, windowRect] = PsychImaging('OpenWindow', ...
+        Config.screenNumber, backgroundColor, Config.winRect);
 
     % Hide cursor
     HideCursor(Config.screenNumber);
@@ -307,7 +378,8 @@ try
     Screen('TextFont', windowPtr, txtFont);
 
     % Enable antialiasing
-    Screen('BlendFunction', windowPtr, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    Screen('BlendFunction', ...
+        windowPtr, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
 %------------------------------------------------------------------
@@ -320,11 +392,7 @@ try
     % Set priority to maximum priority
     Priority(MaxPriority(windowPtr));
 
-    % Convert all presentation durations from seconds to number of frames
-    Duration.stimOnsetAsyncMinFrames = round( ...
-        Duration.stimOnsetAsyncMinSecs / Config.ifi);  % in frames
-    Duration.stimOnsetAsyncMaxFrames = round( ...
-        Duration.stimOnsetAsyncMaxSecs / Config.ifi);  % in frames
+    % Convert presentation durations from seconds to number of frames
     Duration.arrowFrames = round( ...
         Duration.arrowSecs / Config.ifi);              % in frames
     Duration.memoryArrayFrames = round( ...
@@ -349,7 +417,7 @@ try
 
     % Present general instructions to participant
     DrawFormattedText(windowPtr, Msg.instructions, ...
-        'center', 'center', textColor);
+        'center', 'center', txtColor);
     Screen('Flip', windowPtr);
 
     % Increase text size by 50 % for rest of experiment
@@ -380,7 +448,7 @@ try
             % Display progress to participant
             DrawFormattedText(windowPtr, ...
                 sprintf(Msg.progress, Progress.completed), ...
-                'center', 'center', textColor)
+                'center', 'center', txtColor)
             Screen('Flip', windowPtr);
 
             % Wait for participant to press the space bar to start the
@@ -410,7 +478,7 @@ try
     % Present thank-you-message to participant
     for secs = 10:-1:1
         DrawFormattedText(windowPtr, sprintf(Msg.thankYou, secs), ...
-            'center', 'center', textColor);
+            'center', 'center', txtColor);
         Screen('Flip', windowPtr);
         WaitSecs(1);
     end

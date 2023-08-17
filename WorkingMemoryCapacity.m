@@ -64,10 +64,10 @@ nSquares = 4;
 
 % Total number of trials
 % NOTE: Vogel & Machizawa (2004) conducted 240 trials per condition
-nTrials = 240;
+nTrials = 20;
 
 % (Orthogonal) distance from eye to screen in mm
-viewingDistanceMM = 900;  % in mm
+viewingDistanceMM = 600;  % in mm
 
 % 'Progress.thresholdPct' can be modified to control how often the
 % participant is informed about his/her progress
@@ -77,7 +77,7 @@ viewingDistanceMM = 900;  % in mm
 % NOTE: While this script does work for arbitrary numbers between 1 and 100,
 % the value of 'Progress.thresholdPct' should be chosen reasonably.
 % Sensible choices would be 5 %, 10 %, 20 % or 25 %.
-Progress.thresholdPct = 10;  % in pct
+Progress.thresholdPct = 20;  % in pct
 
 % Set range to be used for the SOA (values are the ones used by Vogel &
 % Machizawa (2004))
@@ -181,7 +181,7 @@ Msg.errorExptAborted = ['The participant has ended the experiment ' ...
 % Define background color
 % NOTE: Vogel & Machizawa (2004) used a gray background with a luminance of
 % 8.2 cd/m^2
-backgroundColor = 0.5;
+backgroundColor = 0.4;
 
 % Define colors used for the squares
 nColors = 7;
@@ -206,12 +206,39 @@ colorNames = ["red"; "blue"; "violet"; "green"; ...
 %       POSITIONING AND SIZE OF FIXATION CROSS & ARROW
 %------------------------------------------------------------------
 
-% TODO: Set length and center based on degrees of visual angle
-Arrow.length = 200;                           % in pixels
-Arrow.headLength = floor(Arrow.length ./ 3);  % in pixels
-Arrow.width = 5;                              % in pixels
-Arrow.angle = 40;                             % in degrees
-Arrow.center = Config.center - [0, 100];      % in pixels
+% Set length and vertical displacement of arrow in degrees of visual angle
+arrLengthVA = 2;            % in degrees of visual angle
+arrVertDisplacementVA = 1;  % in degrees of visual angle
+
+% Convert length of arrow from degrees of visual angle to pixels
+Arrow.length = round(visualAngleToSize( ...
+    arrLengthVA, viewingDistanceMM) * Config.pixelsPerMM);  % in pixels
+
+% Set length of the arrowhead relative to length of the shaft of the arrow
+Arrow.headLength = floor(Arrow.length / 3);  % in pixels
+
+% Convert vertical displacement from degrees of visual angle to pixels
+arrVertDisplacementPixels = round(visualAngleToSize( ...
+    arrVertDisplacementVA, viewingDistanceMM) * Config.pixelsPerMM);  % in pixels
+
+% Compute center of arrow
+% NOTE: The fixation cross will be placed at the center of the screen.
+% The arrow will be presented slightly above the fixation cross.
+Arrow.center = Config.center - [0, arrVertDisplacementPixels];
+
+% Set width of arrow and angle between shaft and arrowhead
+Arrow.width = 5;   % in pixels
+Arrow.angle = 40;  % in degrees
+
+% Size and thickness of the fixation cross
+fixCrossVA = 0.5;  % in degrees of visual angle
+FixCross.size = round(visualAngleToSize( ...
+    fixCrossVA, viewingDistanceMM) * Config.pixelsPerMM);  % in pixels
+FixCross.width = 2;  % in pixels
+
+% Clean up workspace
+clear arrLengthVA arrVertDisplacementPixels arrVertDisplacementVA ...
+    fixCrossVA
 
 
 %------------------------------------------------------------------
@@ -448,7 +475,7 @@ try
             % Display progress to participant
             DrawFormattedText(windowPtr, ...
                 sprintf(Msg.progress, Progress.completed), ...
-                'center', 'center', txtColor)
+                'center', 'center', txtColor);
             Screen('Flip', windowPtr);
 
             % Wait for participant to press the space bar to start the
@@ -461,10 +488,72 @@ try
                 end
             end
         end
+
+        % STEP 1: Prepare for trial
+        %   1.1 Query stimulus onset asynchrony (in secs) and convert to
+        %   number of frames
+        stimOnsetAsyncSecs = trials.StimOnsetAsyncSecs(iTrial);
+        stimOnsetAsyncFrames = round(stimOnsetAsyncSecs / Config.ifi);
+
+        %   1.2 Query positioning and colors of squares in memory array
+
+        % STEP 2: Display fixation cross
+        %   2.1 Draw fixation cross at the center of the screen
+        %   NOTE: Type "help drawFixationCross" into the command window for
+        %   further information.
+        drawFixationCross(windowPtr, FixCross.size, FixCross.width, ...
+            Config.center, txtColor);
+        
+        %   2.2 Flip fixation cross to screen
+        %   NOTE: We set 'dontclear' (fourth argument) to 1 for
+        %   incremental drawing (since we also want the fixation cross
+        %   to be displayed when the arrow is presented next)
+        [~, stimulusOnsetTime] = Screen('Flip', windowPtr, [], 1);
+
+        % STEP 3: Display arrow indicating left vs. right
+        %   3.1 Draw arrow
+        %   NOTE: Type "help drawArrow" into the command window for further
+        %   information.
+        drawArrow(windowPtr, Arrow.length, Arrow.headLength, ...
+            Arrow.width, Arrow.angle, Arrow.center, ...
+            trials.Hemifield(iTrial));
+
+        %   3.2 Flip arrow to screen
+        [~, stimulusOnsetTime] = Screen('Flip', windowPtr, ...
+            stimulusOnsetTime + (stimOnsetAsyncFrames-0.5) * Config.ifi);
+
+        % STEP 4: Display memory array
+        %   4.1 Draw memory array (and fixation cross)
+        drawFixationCross(windowPtr, FixCross.size, FixCross.width, ...
+            Config.center, txtColor);
+
+        %   4.2 Flip memory array (and fixation cross) to screen
+        [~, stimulusOnsetTime] = Screen('Flip', windowPtr, ...
+            stimulusOnsetTime + (Duration.arrowFrames-0.5) * Config.ifi);
+
+        % STEP 5: Retention interval
+        %   5.1 Draw fixation cross
+        drawFixationCross(windowPtr, FixCross.size, FixCross.width, ...
+            Config.center, txtColor);
+
+        %   5.2 Erase memory array and flip fixation cross to screen
+        %   NOTE: We're again using incremental drawing here
+        [~, stimulusOnsetTime] = Screen('Flip', windowPtr, ...
+            stimulusOnsetTime + ...
+            (Duration.memoryArrayFrames-0.5) * Config.ifi, 1);
+
+        % STEP 6: Display test array and check for response
+        %   6.1 Draw test array
+
+        %   6.2 Flip test array to screen
+        [~, stimulusOnsetTime] = Screen('Flip', windowPtr, ...
+            stimulusOnsetTime + ...
+            (Duration.retentionIntervalFrames-0.5) * Config.ifi);
     end
 
     % Clean up workspace
-    clear iTrial keyCode nTrials
+    clear iTrial keyCode nTrials stimOnsetAsyncFrames stimOnsetAsyncSecs ...
+        stimulusOnsetTime
 
 
 %----------------------------------------------------------------------
@@ -513,7 +602,8 @@ catch errorMessage
     writetable(trials, filename, 'Delimiter', ',');
 
     % Clean up workspace
-    clear ans iTrial keyCode nTrials secs
+    clear ans iTrial keyCode nTrials secs stimOnsetAsyncFrames ...
+        stimOnsetAsyncSecs stimulusOnsetTime
 
     % Turn off character listening, re-enable keyboard input and close all
     % open screens

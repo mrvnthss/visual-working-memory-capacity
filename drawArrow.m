@@ -61,13 +61,13 @@ arrShaftCoords = [-halfArrLength, halfArrLength; 0, 0];
 
 % Compute coordinates of the arrowhead
 vertDisplacement = sind(angle) .* arrHeadLength;
-hrzDisplacement = halfArrLength - cosd(angle).*arrHeadLength;
+horzDisplacement = halfArrLength - cosd(angle).*arrHeadLength;
 
 % NOTE: We compute the x-coordinates for an arrow pointing to the right.
 % If 'direction' is set to "left", we simply flip the sign of these
 % coordinates afterwards.
-xCoordsArrHead = [halfArrLength, hrzDisplacement, ...
-    halfArrLength, hrzDisplacement];
+xCoordsArrHead = [halfArrLength, horzDisplacement, ...
+    halfArrLength, horzDisplacement];
 yCoordsArrHead = [0, vertDisplacement, 0, -vertDisplacement];
 
 if strcmp(direction, "left")

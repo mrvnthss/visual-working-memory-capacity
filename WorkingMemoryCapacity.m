@@ -60,14 +60,20 @@ rng('shuffle')
 
 % Set number of colored squares per hemifield
 % NOTE: Parameters used by Vogel & Machizawa (2004): 1, 2, 3, 4, 6, 8, 10
-nSquares = 4;
+nSquares = 5;
 
 % Total number of trials
 % NOTE: Vogel & Machizawa (2004) conducted 240 trials per condition
-nTrials = 20;
+nTrials = 240;
 
 % (Orthogonal) distance from eye to screen in mm
-viewingDistanceMM = 600;  % in mm
+% NOTE: This depends heavily on the setup (chair, desk, laptop vs. external
+% monitor, etc.) that's being used. With my setup, I measured the following
+% distances (using a height-adjustable desk and desk chair that are
+% properly adjusted to me):
+%   - laptop screen (MacBook Pro 16"): 550 mm
+%   - external monitor (Dell U4021QW 40" attached to Ergotron HX): 650 mm
+viewingDistanceMM = 650;  % in mm
 
 % 'Progress.thresholdPct' can be modified to control how often the
 % participant is informed about his/her progress
@@ -77,7 +83,7 @@ viewingDistanceMM = 600;  % in mm
 % NOTE: While this script does work for arbitrary numbers between 1 and 100,
 % the value of 'Progress.thresholdPct' should be chosen reasonably.
 % Sensible choices would be 5 %, 10 %, 20 % or 25 %.
-Progress.thresholdPct = 20;  % in pct
+Progress.thresholdPct = 10;  % in pct
 
 % Set range to be used for the SOA (values are the ones used by Vogel &
 % Machizawa (2004))
@@ -175,12 +181,12 @@ Msg.errorExptAborted = ['The participant has ended the experiment ' ...
 
 
 %------------------------------------------------------------------
-%       STIMULI SETUP
+%       STIMULI SETUP & PREPARATION
 %------------------------------------------------------------------
 
 % Define background color
 % NOTE: Vogel & Machizawa (2004) used a gray background with a luminance of
-% 8.2 cd/m^2
+% 8.2 cd/m^2.
 backgroundColor = 0.4;
 
 % Define colors used for the squares
@@ -201,14 +207,80 @@ colorArray{7} = [1, 1, 1];      % white
 colorNames = ["red"; "blue"; "violet"; "green"; ...
     "yellow"; "black"; "white"];
 
+% NOTE: Vogel & Machizawa (2004) used squares with a size of 0.65° x 0.65°.
+squareSizeVA = 0.65;  % in degrees of visual angle
+
+% Convert size of squares from degrees of visual angle to pixels
+% NOTE: What comes next is a simplification as we're assuming that each
+% square is centered on the screen! Technically, as objects of a fixed size
+% presented on the screen move further into the periphery, their visual
+% angle decreases. Conversely, if we want the visual angle to remain
+% constant at 0.65°, we would have to alter the size of the squares in
+% pixels.
+% TODO: Modify the 'visualAngleToSize' function and adjust this code to
+% account for the above effect!
+squareSize = round(visualAngleToSize( ...
+    squareSizeVA, viewingDistanceMM) * Config.pixelsPerMM);  % in pixels
+squareCoords = [0, 0, squareSize, squareSize];               % in pixels
+
+% Set width and height of the rectangular regions left and right to the
+% fixation cross in which the colored squares will be presented
+% NOTE: These are the values used by Vogel & Machizawa (2004).
+rectRegionSizeVA = [4, 7.3];  % in degrees of visual angle
+
+% Convert from degrees of visual angle to pixels
+rectRegionSize = round(visualAngleToSize( ...
+    rectRegionSizeVA, viewingDistanceMM) * Config.pixelsPerMM);  % in pixels
+
+% We need to subtract 2 * ('squareSize' / 2) from 'rectRegionSize' to
+% obtain the size of the rectangular region of valid locations of the
+% individual squares' centers. Otherwise, if a square were centered right
+% on the edge of the rectangular region, it would extend outside of the
+% latter.
+validCenterPosSize = rectRegionSize - squareSize;
+
+% The rectangular regions are centered 3° of visual angle to the left and
+% right of the central fixation cross in the experiment by Vogel &
+% Machizawa (2004).
+rectRegionHorzShiftVA = 3;  % in degrees of visual angle
+
+% Convert from degrees of visual angle to pixels
+rectRegionHorzShift = round(visualAngleToSize( ...
+    rectRegionHorzShiftVA, viewingDistanceMM) * Config.pixelsPerMM);  % in pixels
+
+% Compute center of the rectangular regions (left & right)
+rectRegionCenterLeft = [Config.xCenter - rectRegionHorzShift, ...
+    Config.yCenter];
+rectRegionCenterRight = [Config.xCenter + rectRegionHorzShift, ...
+    Config.yCenter];
+
+% Compute boundaries of the rectangular regions
+rectRegionLeft = CenterRectOnPoint([0, 0, validCenterPosSize], ...
+    rectRegionCenterLeft(1), rectRegionCenterLeft(2));
+rectRegionRight = CenterRectOnPoint([0, 0, validCenterPosSize], ...
+    rectRegionCenterRight(1), rectRegionCenterRight(2));
+
+% Each square needs to be at least 2° of visual angle away from every other
+% square (measured center to center)
+minDistanceVA = 2;  % in degrees of visual angle
+
+% Convert distance from degrees of visual angle to pixels
+minDistance = round(visualAngleToSize( ...
+    minDistanceVA, viewingDistanceMM) * Config.pixelsPerMM);  % in pixels
+
+% Clean up workspace
+clear minDistanceVA rectRegionCenterLeft rectRegionCenterRight ...
+    rectRegionHorzShift rectRegionHorzShiftVA rectRegionSize ...
+    validCenterPosSize rectRegionSizeVA squareSize squareSizeVA
+
 
 %------------------------------------------------------------------
 %       POSITIONING AND SIZE OF FIXATION CROSS & ARROW
 %------------------------------------------------------------------
 
 % Set length and vertical displacement of arrow in degrees of visual angle
-arrLengthVA = 2;            % in degrees of visual angle
-arrVertDisplacementVA = 1;  % in degrees of visual angle
+arrLengthVA = 2;              % in degrees of visual angle
+arrVertDisplacementVA = 1.5;  % in degrees of visual angle
 
 % Convert length of arrow from degrees of visual angle to pixels
 Arrow.length = round(visualAngleToSize( ...
@@ -227,11 +299,11 @@ arrVertDisplacementPixels = round(visualAngleToSize( ...
 Arrow.center = Config.center - [0, arrVertDisplacementPixels];
 
 % Set width of arrow and angle between shaft and arrowhead
-Arrow.width = 5;   % in pixels
+Arrow.width = 3;   % in pixels
 Arrow.angle = 40;  % in degrees
 
 % Size and thickness of the fixation cross
-fixCrossVA = 0.5;  % in degrees of visual angle
+fixCrossVA = 1;  % in degrees of visual angle
 FixCross.size = round(visualAngleToSize( ...
     fixCrossVA, viewingDistanceMM) * Config.pixelsPerMM);  % in pixels
 FixCross.width = 2;  % in pixels
@@ -257,8 +329,8 @@ StimOnsetAsyncSecs = Duration.stimOnsetAsyncMinSecs + ( ...
 quartiles = floor(quantile(1:nTrials, [0.25, 0.5, 0.75]));
 
 % In half of the trials, participants will have to remember the squares in
-% the left hemisphere.  In the other half of the trials, they will have to
-% remember the squares in the right hemisphere.
+% the left hemifield.  In the other half of the trials, they will have to
+% remember the squares in the right hemifield.
 Hemifield = strings(nTrials, 1);
 Hemifield(1:quartiles(2)) = "left";
 Hemifield(quartiles(2)+1:end) = "right";
@@ -277,15 +349,62 @@ IdenticalArrays( ...
 % than twice in a single memory array.
 ColorsLeft = NaN(nTrials, nSquares);   % array colors (left hemifield)
 ColorsRight = NaN(nTrials, nSquares);  % array colors (right hemifield)
+
 colorCodes = repelem(1:nColors, 2);    % colors to choose from
+
 for iTrial = 1:nTrials
-    % Memory array for left hemisphere
+    % Memory array for left hemifield
     selectedColors = randperm(length(colorCodes), nSquares);
     ColorsLeft(iTrial, :) = colorCodes(selectedColors);
 
-    % Memory array for right hemisphere
+    % Memory array for right hemifield
     selectedColors = randperm(length(colorCodes), nSquares);
     ColorsRight(iTrial, :) = colorCodes(selectedColors);
+end
+
+% For each trial, we randomize the center coordinates for all squares
+xLeftRange = rectRegionLeft([1, 3]);    % range of valid values for x-coordinates in left hemifield
+xRightRange = rectRegionRight([1, 3]);  % range of valid values for x-coordinates in right hemifield
+yRange = rectRegionLeft([2, 4]);        % range of valid values for y-coordinates in either hemifield
+
+XPosLeft = NaN(nTrials, nSquares);   % x-coordinates of squares in left hemifield
+YPosLeft = NaN(nTrials, nSquares);   % x-coordinates of squares in left hemifield
+XPosRight = NaN(nTrials, nSquares);  % x-coordinates of squares in right hemifield
+YPosRight = NaN(nTrials, nSquares);  % y-coordinates of squares in right hemifield
+
+printFreqPct = 10;  % in pct
+printFreq = nTrials * printFreqPct / 100;
+disp("Randomizing positions ...");
+
+for iTrial = 1:nTrials
+    % Randomize coordinates for squares in left hemifield
+    isValidCoords = false;
+    while ~isValidCoords
+        xLeft = randi(xLeftRange, nSquares, 1);
+        yLeft = randi(yRange, nSquares, 1);
+        isValidCoords = min(pdist([xLeft, yLeft])) >= minDistance;
+    end
+
+    XPosLeft(iTrial, :) = xLeft;
+    YPosLeft(iTrial, :) = yLeft;
+
+    % Randomize coordinates for squares in right hemifield
+    isValidCoords = false;
+    while ~isValidCoords
+        xRight = randi(xRightRange, nSquares, 1);
+        yRight = randi(yRange, nSquares, 1);
+        isValidCoords = min(pdist([xRight, yRight])) >= minDistance;
+    end
+
+    XPosRight(iTrial, :) = xRight;
+    YPosRight(iTrial, :) = yRight;
+
+    % Report progress
+    if mod(iTrial, printFreq) == 0
+        trialsComputed = round(iTrial / nTrials * 100);  % in pct
+        fprintf("Randomized positions for %d %% of all trials ...\n", ...
+            trialsComputed);
+    end
 end
 
 % For those trials in which memory and test array do not match, we randomly
@@ -313,15 +432,19 @@ end
 
 % Combine all variables into a single table
 trials = table(Order, StimOnsetAsyncSecs, Hemifield, IdenticalArrays, ...
-    ColorsLeft, ColorsRight, OddSquare, OddColor);
+    ColorsLeft, ColorsRight, XPosLeft, YPosLeft, XPosRight, YPosRight, ...
+    OddSquare, OddColor);
 
 % Randomize order of trials
 trials = sortrows(trials, 'Order');
 
 % Clean up workspace
 clear colorCodes ColorsLeft ColorsRight Hemifield IdenticalArrays ...
-    initColor nColors OddSquare Order possibleColors quartiles ...
-    selectedColors StimOnsetAsyncSecs
+    initColor isValidCoords minDistance nColors OddColor OddSquare ...
+    Order possibleColors printFreq printFreqPct quartiles rectRegionLeft ...
+    rectRegionRight selectedColors StimOnsetAsyncSecs trialsComputed ...
+    xLeft xLeftRange XPosLeft XPosRight xRight xRightRange yLeft ...
+    YPosLeft YPosRight yRange yRight
 
 
 %----------------------------------------------------------------------
@@ -489,13 +612,52 @@ try
             end
         end
 
+
         % STEP 1: Prepare for trial
         %   1.1 Query stimulus onset asynchrony (in secs) and convert to
         %   number of frames
         stimOnsetAsyncSecs = trials.StimOnsetAsyncSecs(iTrial);
         stimOnsetAsyncFrames = round(stimOnsetAsyncSecs / Config.ifi);
 
-        %   1.2 Query positioning and colors of squares in memory array
+        %   1.2 Query colors of squares in memory array
+        allColorCodes = [trials.ColorsLeft(iTrial, :), ...
+            trials.ColorsRight(iTrial, :)];
+
+        allColorsMemory = NaN(3, 2*nSquares);
+        for iSquare = 1:2*nSquares
+            allColorsMemory(:, iSquare) = colorArray{allColorCodes(iSquare)};
+        end
+        allColorsTest = allColorsMemory;
+
+        %   1.3 Query positioning of squares
+        allSquares = repmat(squareCoords', 1, 2*nSquares);
+        % NOTE: We make use of the fact that 'CenterRectOnPoint' is a
+        % vectorized function to avoid a for-loop.
+        allSquares = CenterRectOnPoint(allSquares, ...
+            [trials.XPosLeft(iTrial, :), trials.XPosRight(iTrial, :)], ...
+            [trials.YPosLeft(iTrial, :), trials.YPosRight(iTrial, :)]);
+
+        %   1.4 Modify colors for test array if applicable
+        if ~trials.IdenticalArrays(iTrial)
+            % Query new color
+            oddColorCode = trials.OddColor(iTrial);
+            oddColor = colorArray{oddColorCode};
+
+            % Query square that ought to change color
+            oddSquare = trials.OddSquare(iTrial);
+            % The next step accounts for the fact that we have combined
+            % the colors of all squares into a single matrix in which the
+            % first 'nSquares' columns correspond to squares in the left
+            % hemifield and the second 'nSquares' columns correspond to
+            % squares in the right hemifield.
+            if strcmp(trials.Hemifield(iTrial), "right")
+                oddSquare = oddSquare + nSquares;
+            end
+            
+            % Modify color of appropriate square
+            allColorsTest(:, oddSquare) = oddColor;
+        end
+
 
         % STEP 2: Display fixation cross
         %   2.1 Draw fixation cross at the center of the screen
@@ -510,7 +672,8 @@ try
         %   to be displayed when the arrow is presented next)
         [~, stimulusOnsetTime] = Screen('Flip', windowPtr, [], 1);
 
-        % STEP 3: Display arrow indicating left vs. right
+
+        % STEP 3: Display arrow indicating left vs. right hemifield
         %   3.1 Draw arrow
         %   NOTE: Type "help drawArrow" into the command window for further
         %   information.
@@ -522,14 +685,17 @@ try
         [~, stimulusOnsetTime] = Screen('Flip', windowPtr, ...
             stimulusOnsetTime + (stimOnsetAsyncFrames-0.5) * Config.ifi);
 
+
         % STEP 4: Display memory array
         %   4.1 Draw memory array (and fixation cross)
         drawFixationCross(windowPtr, FixCross.size, FixCross.width, ...
             Config.center, txtColor);
+        Screen('FillRect', windowPtr, allColorsMemory, allSquares);
 
         %   4.2 Flip memory array (and fixation cross) to screen
         [~, stimulusOnsetTime] = Screen('Flip', windowPtr, ...
             stimulusOnsetTime + (Duration.arrowFrames-0.5) * Config.ifi);
+
 
         % STEP 5: Retention interval
         %   5.1 Draw fixation cross
@@ -542,17 +708,28 @@ try
             stimulusOnsetTime + ...
             (Duration.memoryArrayFrames-0.5) * Config.ifi, 1);
 
+
         % STEP 6: Display test array and check for response
-        %   6.1 Draw test array
+        %   6.1 Draw test array (and fixation cross)
+        drawFixationCross(windowPtr, FixCross.size, FixCross.width, ...
+            Config.center, txtColor);
+        Screen('FillRect', windowPtr, allColorsTest, allSquares);
 
         %   6.2 Flip test array to screen
         [~, stimulusOnsetTime] = Screen('Flip', windowPtr, ...
             stimulusOnsetTime + ...
             (Duration.retentionIntervalFrames-0.5) * Config.ifi);
+
+
+        % STEP 7: Collect response
+        % TODO: Replace with actual code to collect response
+        WaitSecs(Duration.testArraySecs);
     end
 
     % Clean up workspace
-    clear iTrial keyCode nTrials stimOnsetAsyncFrames stimOnsetAsyncSecs ...
+    clear allColorCodes allColorsMemory allColorsTest allSquares ...
+        iSquare iTrial keyCode nTrials oddColor oddColorCode oddSquare ...
+        squareCoords stimOnsetAsyncFrames stimOnsetAsyncSecs ...
         stimulusOnsetTime
 
 
@@ -602,8 +779,10 @@ catch errorMessage
     writetable(trials, filename, 'Delimiter', ',');
 
     % Clean up workspace
-    clear ans iTrial keyCode nTrials secs stimOnsetAsyncFrames ...
-        stimOnsetAsyncSecs stimulusOnsetTime
+    clear allColorCodes allColorsMemory allColorsTest allSquares ans ...
+        iSquare iTrial keyCode nTrials oddColor oddColorCode oddSquare ...
+        secs squareCoords stimOnsetAsyncFrames stimOnsetAsyncSecs ...
+        stimulusOnsetTime
 
     % Turn off character listening, re-enable keyboard input and close all
     % open screens

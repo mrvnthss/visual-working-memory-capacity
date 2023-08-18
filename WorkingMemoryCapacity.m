@@ -60,7 +60,7 @@ rng('shuffle')
 
 % Set number of colored squares per hemifield
 % NOTE: Parameters used by Vogel & Machizawa (2004): 1, 2, 3, 4, 6, 8, 10
-nSquares = 5;
+nSquares = 4;
 
 % Total number of trials
 % NOTE: Vogel & Machizawa (2004) conducted 240 trials per condition
@@ -73,7 +73,7 @@ nTrials = 240;
 % properly adjusted to me):
 %   - laptop screen (MacBook Pro 16"): 550 mm
 %   - external monitor (Dell U4021QW 40" attached to Ergotron HX): 650 mm
-viewingDistanceMM = 650;  % in mm
+viewingDistanceMM = 550;  % in mm
 
 % 'Progress.thresholdPct' can be modified to control how often the
 % participant is informed about his/her progress
@@ -187,7 +187,7 @@ Msg.errorExptAborted = ['The participant has ended the experiment ' ...
 % Define background color
 % NOTE: Vogel & Machizawa (2004) used a gray background with a luminance of
 % 8.2 cd/m^2.
-backgroundColor = 0.4;
+backgroundColor = 0.6;
 
 % Define colors used for the squares
 nColors = 7;
@@ -275,12 +275,12 @@ clear minDistanceVA rectRegionCenterLeft rectRegionCenterRight ...
 
 
 %------------------------------------------------------------------
-%       POSITIONING AND SIZE OF FIXATION CROSS & ARROW
+%       POSITIONING AND SIZE OF FIXATION CROSS & ARROW(S)
 %------------------------------------------------------------------
 
 % Set length and vertical displacement of arrow in degrees of visual angle
-arrLengthVA = 2;              % in degrees of visual angle
-arrVertDisplacementVA = 1.5;  % in degrees of visual angle
+arrLengthVA = 1;               % in degrees of visual angle
+arrVertDisplacementVA = 0.75;  % in degrees of visual angle
 
 % Convert length of arrow from degrees of visual angle to pixels
 Arrow.length = round(visualAngleToSize( ...
@@ -299,11 +299,11 @@ arrVertDisplacementPixels = round(visualAngleToSize( ...
 Arrow.center = Config.center - [0, arrVertDisplacementPixels];
 
 % Set width of arrow and angle between shaft and arrowhead
-Arrow.width = 3;   % in pixels
+Arrow.width = 2;   % in pixels
 Arrow.angle = 40;  % in degrees
 
 % Size and thickness of the fixation cross
-fixCrossVA = 1;  % in degrees of visual angle
+fixCrossVA = 0.65;  % in degrees of visual angle
 FixCross.size = round(visualAngleToSize( ...
     fixCrossVA, viewingDistanceMM) * Config.pixelsPerMM);  % in pixels
 FixCross.width = 2;  % in pixels
@@ -430,10 +430,13 @@ for iTrial = 1:nTrials
     end
 end
 
+% Column to store the participant's responses
+Response = strings(nTrials, 1);
+
 % Combine all variables into a single table
 trials = table(Order, StimOnsetAsyncSecs, Hemifield, IdenticalArrays, ...
     ColorsLeft, ColorsRight, XPosLeft, YPosLeft, XPosRight, YPosRight, ...
-    OddSquare, OddColor);
+    OddSquare, OddColor, Response);
 
 % Randomize order of trials
 trials = sortrows(trials, 'Order');
@@ -442,9 +445,9 @@ trials = sortrows(trials, 'Order');
 clear colorCodes ColorsLeft ColorsRight Hemifield IdenticalArrays ...
     initColor isValidCoords minDistance nColors OddColor OddSquare ...
     Order possibleColors printFreq printFreqPct quartiles rectRegionLeft ...
-    rectRegionRight selectedColors StimOnsetAsyncSecs trialsComputed ...
-    xLeft xLeftRange XPosLeft XPosRight xRight xRightRange yLeft ...
-    YPosLeft YPosRight yRange yRight
+    rectRegionRight Response selectedColors StimOnsetAsyncSecs ...
+    trialsComputed xLeft xLeftRange XPosLeft XPosRight xRight ...
+    xRightRange yLeft YPosLeft YPosRight yRange yRight
 
 
 %----------------------------------------------------------------------
@@ -658,6 +661,11 @@ try
             allColorsTest(:, oddSquare) = oddColor;
         end
 
+        %   1.5 Set logical used for collection of response and clear
+        %   response from previous trial
+        isResponseGiven = false;
+        response = "";
+
 
         % STEP 2: Display fixation cross
         %   2.1 Draw fixation cross at the center of the screen
@@ -722,15 +730,48 @@ try
 
 
         % STEP 7: Collect response
-        % TODO: Replace with actual code to collect response
-        WaitSecs(Duration.testArraySecs);
+        %   7.1: Keep checking for response while test array is on screen
+        while true
+            [~, secs, keyCode] = KbCheck(Config.keyboard);
+            % Once the test array has been on screen for 2,000 ms, we wipe
+            % the screen and stop checking for a response
+            timeElapsed = secs - stimulusOnsetTime;
+            if timeElapsed >= Duration.testArraySecs
+                drawFixationCross(windowPtr, FixCross.size, ...
+                    FixCross.width, Config.center, txtColor);
+                Screen('Flip', windowPtr);
+                break
+            end
+
+            % Check if experiment is to be aborted
+            if keyCode(Key.escape)
+                % Throw error containing number of completed (out of total)
+                % trials
+                error(Msg.errorExptAborted, iTrial-1, nTrials);
+            end
+
+            if ~isResponseGiven
+                % Check if a valid response was given
+                if keyCode(Key.identical)
+                    response = "identical";
+                    isResponseGiven = true;
+                elseif keyCode(Key.different)
+                    response = "different";
+                    isResponseGiven = true;
+                end
+            end
+        end
+
+        %   7.2 Store participant's response
+        trials.Response(iTrial) = response;
     end
 
     % Clean up workspace
     clear allColorCodes allColorsMemory allColorsTest allSquares ...
-        iSquare iTrial keyCode nTrials oddColor oddColorCode oddSquare ...
-        squareCoords stimOnsetAsyncFrames stimOnsetAsyncSecs ...
-        stimulusOnsetTime
+        iSquare isResponseGiven iTrial keyCode nTrials oddColor ...
+        oddColorCode oddSquare response squareCoords ...
+        stimOnsetAsyncFrames stimOnsetAsyncSecs stimulusOnsetTime ...
+        timeElapsed
 
 
 %----------------------------------------------------------------------
@@ -780,9 +821,10 @@ catch errorMessage
 
     % Clean up workspace
     clear allColorCodes allColorsMemory allColorsTest allSquares ans ...
-        iSquare iTrial keyCode nTrials oddColor oddColorCode oddSquare ...
-        secs squareCoords stimOnsetAsyncFrames stimOnsetAsyncSecs ...
-        stimulusOnsetTime
+        iSquare isResponseGiven iTrial keyCode nTrials oddColor ...
+        oddColorCode oddSquare response secs squareCoords ...
+        stimOnsetAsyncFrames stimOnsetAsyncSecs stimulusOnsetTime ...
+        timeElapsed
 
     % Turn off character listening, re-enable keyboard input and close all
     % open screens

@@ -64,7 +64,7 @@ nSquares = 4;
 
 % Total number of trials
 % NOTE: Vogel & Machizawa (2004) conducted 240 trials per condition
-nTrials = 240;
+nTrials = 24;
 
 % (Orthogonal) distance from eye to screen in mm
 % NOTE: This depends heavily on the setup (chair, desk, laptop vs. external
@@ -137,7 +137,22 @@ Key.escape = KbName('ESCAPE');
 %------------------------------------------------------------------
 
 % Message to be displayed at the very beginning of the experiment
-Msg.instructions = ['\n\n' ...
+Msg.instructions = [ 'Hi there!\n\n'...
+    'This experiment will test your visual working memory capacity.\n'...
+    'Throughout the experiment, you will have to fixate a fixation cross\n' ...
+    'at the center of the screen. At the beginning of each trial, an\n' ...
+    'arrow will briefly appear just above this fixation cross, pointing\n' ...
+    'left or right. Immediately after, %d colored squares will appear left\n' ...
+    'and right to the fixation cross (i.e., %d squares in total). These\n' ...
+    'squares will only be flashed very briefly! It is your task to remember\n' ...
+    'the colors of the squares that the arrow pointed towards (and only\n' ...
+    'these squares). After a short period of just the fixation cross\n' ...
+    'being visible on screen, the squares will reappear. You have to judge\n' ...
+    'whether the colors of the squares in the hemifield indicated by the\n' ...
+    'arrow are identical or not. Press ''j'' if you think they are. If you think\n' ...
+    'one square has changed color, press ''f''.\n\n' ...
+    'Note: Each trial starts and ends automatically, you can only answer once,\n' ...
+    'and you will not receive feedback whether your answer was correct.\n\n' ...
     'Press space to start the first block of trials.'];
 
 % Message to be displayed to inform the participant about his/her progress
@@ -431,7 +446,13 @@ for iTrial = 1:nTrials
 end
 
 % Column to store the participant's responses
-Response = strings(nTrials, 1);
+% NOTE: We initialize the response column as a vector of missing values and
+% we later assign empty strings if the participant does not give a valid
+% response while the test array is on screen.  That way, we can
+% differentiate between trials that have not been completed and those where
+% no valid response was given if the experiment is aborted before all
+% trials are completed.
+Response = string(NaN(nTrials, 1));
 
 % Combine all variables into a single table
 trials = table(Order, StimOnsetAsyncSecs, Hemifield, IdenticalArrays, ...
@@ -569,7 +590,8 @@ try
     Progress.stepArray = Progress.stepArray(2:end);
 
     % Present general instructions to participant
-    DrawFormattedText(windowPtr, Msg.instructions, ...
+    DrawFormattedText(windowPtr, ...
+        sprintf(Msg.instructions, nSquares, 2*nSquares), ...
         'center', 'center', txtColor);
     Screen('Flip', windowPtr);
 
@@ -605,12 +627,17 @@ try
             Screen('Flip', windowPtr);
 
             % Wait for participant to press the space bar to start the
-            % next block of trials
+            % next block of trials or press the escape key to end the
+            % experiment prematurely
             KbReleaseWait(Config.keyboard);
             while true
                 [~, ~, keyCode] = KbCheck(Config.keyboard);
                 if keyCode(Key.space)
                     break
+                elseif keyCode(Key.escape)
+                    % Throw error containing number of completed (out of
+                    % total) trials
+                    error(Msg.errorExptAborted, iTrial-1, nTrials);
                 end
             end
         end
@@ -806,7 +833,7 @@ try
 
     % Turn off character listening, re-enable keyboard input and close all
     % open screens
-    shutDown();
+    endExperiment();
 
 
 %----------------------------------------------------------------------
@@ -828,7 +855,7 @@ catch errorMessage
 
     % Turn off character listening, re-enable keyboard input and close all
     % open screens
-    shutDown();
+    endExperiment();
 
     % Rethrow error message for debugging purposes
     rethrow(errorMessage);
@@ -839,8 +866,8 @@ end
 %   HELPER FUNCTION(S)
 %----------------------------------------------------------------------
 
-function shutDown()
-% SHUTDOWN - Turn off character listening and close all open screens
+function endExperiment()
+% ENDEXPERIMENT - Turn off character listening and close all open screens
     ListenChar(0);
     Screen('CloseAll');
 end

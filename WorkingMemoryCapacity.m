@@ -62,17 +62,20 @@ rng('shuffle')
 % NOTE: Parameters used by Vogel & Machizawa (2004): 1, 2, 3, 4, 6, 8, 10
 nSquares = 4;
 
-% Total number of trials
+% Number of trials (excluding practice trials)
 % NOTE: Vogel & Machizawa (2004) conducted 240 trials per condition
-nTrials = 24;
+nTrials = 240;
+
+% Number of practice trials
+nPracticeTrials = 10;
 
 % (Orthogonal) distance from eye to screen in mm
 % NOTE: This depends heavily on the setup (chair, desk, laptop vs. external
 % monitor, etc.) that's being used. With my setup, I measured the following
 % distances (using a height-adjustable desk and desk chair that are
 % properly adjusted to me):
-%   - laptop screen (MacBook Pro 16"): 550 mm
-%   - external monitor (Dell U4021QW 40" attached to Ergotron HX): 650 mm
+%   - w/ laptop screen (MacBook Pro 16"): 550 mm
+%   - w/ external monitor (Dell U4021QW 40" attached to Ergotron HX): 650 mm
 viewingDistanceMM = 550;  % in mm
 
 % 'Progress.thresholdPct' can be modified to control how often the
@@ -137,7 +140,7 @@ Key.escape = KbName('ESCAPE');
 %------------------------------------------------------------------
 
 % Message to be displayed at the very beginning of the experiment
-Msg.instructions = [ 'Hi there!\n\n'...
+Msg.instructions = ['Hi there!\n\n'...
     'This experiment will test your visual working memory capacity.\n'...
     'Throughout the experiment, you will have to fixate a fixation cross\n' ...
     'at the center of the screen. At the beginning of each trial, an\n' ...
@@ -153,6 +156,19 @@ Msg.instructions = [ 'Hi there!\n\n'...
     'one square has changed color, press ''f''.\n\n' ...
     'Note: Each trial starts and ends automatically, you can only answer once,\n' ...
     'and you will not receive feedback whether your answer was correct.\n\n' ...
+    'Press space to start with some practice trials.'];
+
+% Message to be displayed after all practice trials have been completed
+Msg.practiceCompleted = [ ...
+    'Great job! You have completed all practice trials! Before we begin,\n' ...
+    'let''s go over some important details for the experiment:\n\n' ...
+    '1.) Every trial starts and ends automatically. You have to respond\n' ...
+    'while the test array is still on screen.\n\n' ...
+    '2.) You cannot change your answer once you have responded.\n\n' ...
+    '3.) Only remember the colors of the squares that the arrow pointed towards.\n\n' ...
+    '4.) Always keep fixating at the fixation cross centered on screen.\n\n' ...
+    'Finally, you will regularly be informed about your progress throughout\n' ...
+    'the experiment. Feel free to use these opportunities to take a break!\n\n' ...
     'Press space to start the first block of trials.'];
 
 % Message to be displayed to inform the participant about his/her progress
@@ -172,20 +188,20 @@ Msg.errorNoInput = ['No participant information was entered into the ' ...
 % Error message that is printed to the command window if an invalid
 % participant ID was entered into the dialog box that is opened at the
 % beginning of the experiment
-Msg.errorInvalidID = ['Participant ID is not valid, expected an ' ...
-    'integer between 1 and 999!'];
+Msg.errorInvalidID = ...
+    'Participant ID is not valid, expected an integer between 1 and 999!';
 
 % Error message that is printed to the command window if an invalid sex
 % was entered into the dialog box that is opened at the beginning of the
 % experiment
-Msg.errorInvalidSex = ['Participant sex is not valid, expected ' ...
-    'one of m, w, d!'];
+Msg.errorInvalidSex = ...
+    'Participant sex is not valid, expected one of m, w, d!';
 
 % Error message that is printed to the command window if an invalid
 % participant age was entered into the dialog box that is opened at the
 % beginning of the experiment
-Msg.errorInvalidAge = ['Participant age is not valid, expected a ' ...
-    'positive integer!'];
+Msg.errorInvalidAge = ...
+    'Participant age is not valid, expected a positive integer!';
 
 % Error message that is printed to the command window if participant ends
 % the experiment prematurely
@@ -193,6 +209,11 @@ Msg.errorExptAborted = ['The participant has ended the experiment ' ...
     'prematurely.\n' ...
     'A total of %d trials out of %d trials have been completed.\n' ...
     'All data collected so far was saved.'];
+
+% Error message that is printed to the command window if participant ends
+% the experiment during or right after the practice trials
+Msg.errorExptAbortedDuringPractice = ...
+    'The participant has ended the experiment during practice.';
 
 
 %------------------------------------------------------------------
@@ -389,7 +410,7 @@ YPosRight = NaN(nTrials, nSquares);  % y-coordinates of squares in right hemifie
 
 printFreqPct = 10;  % in pct
 printFreq = nTrials * printFreqPct / 100;
-disp("Randomizing positions ...");
+disp("Starting to randomize positions!");
 
 for iTrial = 1:nTrials
     % Randomize coordinates for squares in left hemifield
@@ -415,10 +436,12 @@ for iTrial = 1:nTrials
     YPosRight(iTrial, :) = yRight;
 
     % Report progress
-    if mod(iTrial, printFreq) == 0
+    if mod(iTrial, printFreq) == 0 && iTrial < nTrials
         trialsComputed = round(iTrial / nTrials * 100);  % in pct
-        fprintf("Randomized positions for %d %% of all trials ...\n", ...
+        fprintf("Randomized positions for %d %% of trials ...\n", ...
             trialsComputed);
+    elseif iTrial == nTrials
+        disp("Randomization finished!");
     end
 end
 
@@ -462,13 +485,27 @@ trials = table(Order, StimOnsetAsyncSecs, Hemifield, IdenticalArrays, ...
 % Randomize order of trials
 trials = sortrows(trials, 'Order');
 
+% Now that everything is set up, we add practice trials!
+% First, we compute the total number of trials.
+nTotalTrials = nTrials + nPracticeTrials;
+
+% Then, we randomly select trials to (also) use as practice trials ...
+practiceTrials = randperm(nTrials, nPracticeTrials);
+% ... and add them to the 'trials' table
+trials(nTrials+1:nTotalTrials, :) = trials(practiceTrials, :);
+
+% Finally, we assign an 'Order' of 0 to identify the practice trials later
+% on and we move the practice trials to the top of the 'trials' table.
+trials.Order(nTrials+1:nTotalTrials) = 0;
+trials = sortrows(trials, 'Order');
+
 % Clean up workspace
 clear colorCodes ColorsLeft ColorsRight Hemifield IdenticalArrays ...
     initColor isValidCoords minDistance nColors OddColor OddSquare ...
-    Order possibleColors printFreq printFreqPct quartiles rectRegionLeft ...
-    rectRegionRight Response selectedColors StimOnsetAsyncSecs ...
-    trialsComputed xLeft xLeftRange XPosLeft XPosRight xRight ...
-    xRightRange yLeft YPosLeft YPosRight yRange yRight
+    Order possibleColors practiceTrials printFreq printFreqPct ...
+    quartiles rectRegionLeft rectRegionRight Response selectedColors ...
+    StimOnsetAsyncSecs trialsComputed xLeft xLeftRange XPosLeft ...
+    XPosRight xRight xRightRange yLeft YPosLeft YPosRight yRange yRight
 
 
 %----------------------------------------------------------------------
@@ -595,10 +632,7 @@ try
         'center', 'center', txtColor);
     Screen('Flip', windowPtr);
 
-    % Increase text size by 50 % for rest of experiment
-    Screen('TextSize', windowPtr, 1.5 * txtSize);
-
-    % Wait for participant to press the space bar to start the first trial
+    % Wait for participant to start the first practice trial
     KbReleaseWait(Config.keyboard);
     while true
         [~, ~, keyCode] = KbCheck(Config.keyboard);
@@ -614,11 +648,38 @@ try
 %       LOOP OVER INDIVIDUAL TRIALS
 %------------------------------------------------------------------
 
-    for iTrial = 1:nTrials
-        % STEP 0: Report progress to participant
-        if ismember(iTrial - 1, Progress.stepArray)
+    for iTrial = 1:nTotalTrials
+        % STEP 0: Check for end of practice trials and/or report progress
+        % to participant
+        %   0.1 Check whether it's the end of practice trials
+        if iTrial == nPracticeTrials+1
+            % Present further instructions
+            DrawFormattedText(windowPtr, Msg.practiceCompleted, ...
+                'center', 'center', txtColor);
+            Screen('Flip', windowPtr);
+
+            % Increase text size by 50 % for rest of experiment
+            Screen('TextSize', windowPtr, 1.5 * txtSize);
+
+            % Wait for participant to press the space bar to start the
+            % first block of trials or press the escape key to end the
+            % experiment after practice
+            KbReleaseWait(Config.keyboard);
+            while true
+                [~, ~, keyCode] = KbCheck(Config.keyboard);
+                if keyCode(Key.space)
+                    break
+                elseif keyCode(Key.escape)
+                    error(Msg.errorExptAbortedDuringPractice);
+                end
+            end
+        end
+
+        %   0.2 Report progress to participant during experiment
+        if ismember(iTrial - (nPracticeTrials+1), Progress.stepArray)
             % Compute progress
-            Progress.completed = round((iTrial - 1) / nTrials * 100);  % in pct
+            Progress.completed = round((iTrial - (nPracticeTrials+1)) / ...
+                nTrials * 100);  % in pct
 
             % Display progress to participant
             DrawFormattedText(windowPtr, ...
@@ -637,7 +698,8 @@ try
                 elseif keyCode(Key.escape)
                     % Throw error containing number of completed (out of
                     % total) trials
-                    error(Msg.errorExptAborted, iTrial-1, nTrials);
+                    error(Msg.errorExptAborted, ...
+                        iTrial - (nPracticeTrials+1), nTrials);
                 end
             end
         end
@@ -772,9 +834,12 @@ try
 
             % Check if experiment is to be aborted
             if keyCode(Key.escape)
-                % Throw error containing number of completed (out of total)
-                % trials
-                error(Msg.errorExptAborted, iTrial-1, nTrials);
+                if trials.Order(iTrial) == 0  % practice trials
+                    error(Msg.errorExptAbortedDuringPractice);
+                else  % "non-practice" trials
+                    error(Msg.errorExptAborted, ...
+                        iTrial - (nPracticeTrials+1), nTrials);
+                end
             end
 
             if ~isResponseGiven
@@ -795,10 +860,10 @@ try
 
     % Clean up workspace
     clear allColorCodes allColorsMemory allColorsTest allSquares ...
-        iSquare isResponseGiven iTrial keyCode nTrials oddColor ...
-        oddColorCode oddSquare response squareCoords ...
-        stimOnsetAsyncFrames stimOnsetAsyncSecs stimulusOnsetTime ...
-        timeElapsed
+        iSquare isResponseGiven iTrial keyCode nPracticeTrials ...
+        nTotalTrials nTrials oddColor oddColorCode oddSquare response ...
+        squareCoords stimOnsetAsyncFrames stimOnsetAsyncSecs ...
+        stimulusOnsetTime timeElapsed
 
 
 %----------------------------------------------------------------------
@@ -848,10 +913,10 @@ catch errorMessage
 
     % Clean up workspace
     clear allColorCodes allColorsMemory allColorsTest allSquares ans ...
-        iSquare isResponseGiven iTrial keyCode nTrials oddColor ...
-        oddColorCode oddSquare response secs squareCoords ...
-        stimOnsetAsyncFrames stimOnsetAsyncSecs stimulusOnsetTime ...
-        timeElapsed
+        iSquare isResponseGiven iTrial keyCode nPracticeTrials ...
+        nTotalTrials nTrials oddColor oddColorCode oddSquare response ...
+        secs squareCoords stimOnsetAsyncFrames stimOnsetAsyncSecs ...
+        stimulusOnsetTime timeElapsed
 
     % Turn off character listening, re-enable keyboard input and close all
     % open screens

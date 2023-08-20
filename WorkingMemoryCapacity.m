@@ -63,7 +63,7 @@ rng('shuffle')
 nSquares = 4;
 
 % Number of trials (excluding practice trials)
-% NOTE: Vogel & Machizawa (2004) conducted 240 trials per condition
+% NOTE: Vogel & Machizawa (2004) conducted 240 trials in each experiment
 nTrials = 240;
 
 % Number of practice trials
@@ -71,9 +71,9 @@ nPracticeTrials = 10;
 
 % (Orthogonal) distance from eye to screen in mm
 % NOTE: This depends heavily on the setup (chair, desk, laptop vs. external
-% monitor, etc.) that's being used. With my setup, I measured the following
-% distances (using a height-adjustable desk and desk chair that are
-% properly adjusted to me):
+% monitor, etc.) that's being used.  With my setup, I measured the
+% following distances (using a height-adjustable desk and desk chair that
+% are properly adjusted to me):
 %   - w/ laptop screen (MacBook Pro 16"): 550 mm
 %   - w/ external monitor (Dell U4021QW 40" attached to Ergotron HX): 650 mm
 viewingDistanceMM = 550;  % in mm
@@ -251,11 +251,11 @@ squareSizeVA = 0.65;  % in degrees of visual angle
 
 % Convert size of squares from degrees of visual angle to pixels
 % NOTE: What comes next is a simplification as we're assuming that each
-% square is centered on the screen! Technically, as objects of a fixed size
-% presented on the screen move further into the periphery, their visual
-% angle decreases. Conversely, if we want the visual angle to remain
-% constant at 0.65°, we would have to alter the size of the squares in
-% pixels.
+% square is centered on the screen!  Technically, as objects of a fixed
+% size presented on the screen move further into the periphery, their
+% visual angle decreases.  Conversely, if we want the visual angle to
+% remain constant at 0.65°, we would have to alter the size of the squares
+% in pixels.
 % TODO: Modify the 'visualAngleToSize' function and adjust this code to
 % account for the above effect!
 squareSize = round(visualAngleToSize( ...
@@ -263,7 +263,7 @@ squareSize = round(visualAngleToSize( ...
 squareCoords = [0, 0, squareSize, squareSize];               % in pixels
 
 % Set width and height of the rectangular regions left and right to the
-% fixation cross in which the colored squares will be presented
+% fixation cross in which the colored squares will be presented.
 % NOTE: These are the values used by Vogel & Machizawa (2004).
 rectRegionSizeVA = [4, 7.3];  % in degrees of visual angle
 
@@ -273,7 +273,7 @@ rectRegionSize = round(visualAngleToSize( ...
 
 % We need to subtract 2 * ('squareSize' / 2) from 'rectRegionSize' to
 % obtain the size of the rectangular region of valid locations of the
-% individual squares' centers. Otherwise, if a square were centered right
+% individual squares' centers.  Otherwise, if a square were centered right
 % on the edge of the rectangular region, it would extend outside of the
 % latter.
 validCenterPosSize = rectRegionSize - squareSize;
@@ -418,7 +418,7 @@ disp("Starting to randomize positions!");
 % NOTE: We're using a brute-force-approach to randomize the center
 % coordinates, i.e., we simply generate 'nSquares' (pseudo-)random
 % coordinates and then check if these satisfy the condition that all
-% centers are at least 'minDistance' pixels apart from each other. If not,
+% centers are at least 'minDistance' pixels apart from each other.  If not,
 % we generate a new set of (pseudo-)random coordinates and check again, and
 % so on.
 %
@@ -604,8 +604,9 @@ try
 
     % Enable listening for keyboard input & suppress any output of key
     % presses to MATLAB windows (e.g., this script)
-    % NOTE: Inside the function 'shutDown', the command 'ListenChar(0)' is
-    % issued to turn off character listening and re-enable keyboard input!
+    % NOTE: Inside the function 'endExperiment', the command
+    % 'ListenChar(0)' is issued to turn off character listening and
+    % re-enable keyboard input!
     ListenChar(2);
 
     % Open new PTB window with gray background
@@ -654,7 +655,7 @@ try
     Progress.nSteps = round(100 / Progress.thresholdPct);
     Progress.stepArray = round(linspace(0, nTrials, Progress.nSteps + 1));
 
-    % Drop first entry (which is always equal to 0)
+    % Drop first entry (which is always equal to 0 by design)
     Progress.stepArray = Progress.stepArray(2:end);
 
     % Present general instructions to participant
@@ -797,7 +798,7 @@ try
         %   2.2 Flip fixation cross to screen
         %   NOTE: We set 'dontclear' (fourth argument) to 1 for
         %   incremental drawing (since we also want the fixation cross
-        %   to be displayed when the arrow is presented next)
+        %   to be displayed when the arrow is presented next).
         [~, stimulusOnsetTime] = Screen('Flip', windowPtr, [], 1);
 
 
@@ -831,7 +832,7 @@ try
             Config.center, txtColor);
 
         %   5.2 Erase memory array and flip fixation cross to screen
-        %   NOTE: We're again using incremental drawing here
+        %   NOTE: We're again using incremental drawing here!
         [~, stimulusOnsetTime] = Screen('Flip', windowPtr, ...
             stimulusOnsetTime + ...
             (Duration.memoryArrayFrames-0.5) * Config.ifi, 1);
@@ -852,6 +853,9 @@ try
         % STEP 7: Collect response
         %   7.1: Keep checking for response while test array is on screen
         while true
+            % NOTE: 'secs' is the time of the status check as returned by
+            % 'GetSecs'.  Hence, we can simply use this value instead of
+            % issuing an additional call to the 'GetSecs' function!
             [~, secs, keyCode] = KbCheck(Config.keyboard);
             % Once the test array has been on screen for 2,000 ms, we wipe
             % the screen and stop checking for a response

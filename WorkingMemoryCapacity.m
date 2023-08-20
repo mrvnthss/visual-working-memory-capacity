@@ -226,7 +226,7 @@ Msg.errorExptAbortedDuringPractice = ...
 % Define background color
 % NOTE: Vogel & Machizawa (2004) used a gray background with a luminance of
 % 8.2 cd/m^2.
-backgroundColor = 0.5;
+backgroundColor = 0.6;
 
 % Define colors used for the squares
 nColors = 7;

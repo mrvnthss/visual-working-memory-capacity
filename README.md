@@ -8,6 +8,17 @@ This repository contains [MATLAB](#matlab) code that replicates[^1] a visual wor
 
 [^1]: This solely refers to the psychophysics of the study by [Vogel & Machizawa (2004)](#vogel-machizawa). The source code published here is not intended to be used for an actual EEG study.
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Results by Vogel & Machizawa (2004)](#results-by-vogel--machizawa-2004)
+- [Getting Started](#getting-started)
+- [Configuring the Experiment](#configuring-the-experiment)
+- [Known Issues](#known-issues)
+- [References](#references)
+- [Acknowledgments](#acknowledgments)
+- [License](#license)
+
 ## Overview
 
 In their study, [Vogel & Machizawa (2004)](#vogel-machizawa) provide evidence for "**lateralized [brain] activity in humans that reflects the encoding and maintenance of items in visual memory**". Moreover, their study strongly suggests that the amplitude of this neural activity (measured by recording ERPs) serves as a "strong neurophysiological predictor of an individual’s [visual working memory] capacity" ([Vogel & Machizawa, 2004](#vogel-machizawa)).
@@ -28,7 +39,7 @@ Additionally, here is a dynamic preview[^2] of the experiment:
 
 [^2]: The size of the stimuli has been increased for demonstration purposes.
 
-### Results by Vogel & Machizawa (2004)
+## Results by Vogel & Machizawa (2004)
 
 The experiments conducted by [Vogel & Machizawa (2004)](#vogel-machizawa) suggest that there is **lateralized activity** (contralateral to the memorized hemifield) **reflecting** "**the maintenance of successful representations in visual memory**". This activity comes in the form of a "large negative-going voltage (. ...) focused primarily over the posterior parietal and lateral occipital electrode sites" with a peak latency of approximately 200 ms (ERPs were time-locked to the onset of the memory array) ([Vogel & Machizawa, 2004](#vogel-machizawa)).
 
@@ -38,7 +49,7 @@ The mere presence of the described signal during the experiment does not imply t
 
 2. In a third experiment, [Vogel & Machizawa (2004)](#vogel-machizawa) had participants complete the same task again; this time with array sizes of 2, 4, and 6 squares. While there was a significant increase in amplitude going from 2 to 4 squares per array, there was no additional increase when increasing the array size further from 4 to 6 squares. Given that a typical individual's memory capacity is right around 3 to 4 items, this implies that the delay activity's **amplitude only increases for larger stimulus arrays below or at an individual's capacity and does not increase any further for supra-capacity arrays**.
 
-3. This finding was further reinforced by yet another experiment in which participants completed the same experiment again, this time the arrays consisted of 2, 4, 8, and 10 squares each. The finding was identical: While there was a significant increase in amplitude going from 2 to 4 squares per hemifield, no such increase was observed when moving from 4 to either 8 or 10 squares per array ([Vogel & Machizawa, 2004](#vogel-machizawa)).
+3. This finding was further reinforced by yet another experiment in which participants completed the same task again, this time the arrays consisted of 2, 4, 8, and 10 squares each. The finding was identical: While there was a significant increase in amplitude going from 2 to 4 squares per hemifield, no such increase was observed when moving from 4 to either 8 or 10 squares per array ([Vogel & Machizawa, 2004](#vogel-machizawa)).
 
 4. The amplitude of the contralateral delay activity initially increases monotonically as the number of squares per array increases.  However, it quickly reaches its maximum at three items per hemifield and then starts to drop off. Notably, the **visual working memory capacity** averaged across participants was "2.8 items, which is approximately when the memory **delay activity** reaches a limit" suggesting that these two measures are **strongly related** ([Vogel & Machizawa, 2004](#vogel-machizawa)).
 
@@ -66,41 +77,43 @@ git clone https://github.com/mrvnthss/visual-working-memory-capacity
 
 1. Open MATLAB and navigate to the cloned repository's directory.
 
-2. Run the `WorkingMemoryCapacity.m` script to start the experiment.
+2. Run the [`WorkingMemoryCapacity.m`](WorkingMemoryCapacity.m) script to start the experiment.
 
-## Details
+## Configuring the Experiment
 
 ### Setting Experiment Parameters
 
-There are several parameters that can be changed in the `WorkingMemoryCapacity.m` script that alter the experiment. They can be found in the *Configuration of Experiment* section close to the top of the script.
+There are several parameters that can be changed in the [`WorkingMemoryCapacity.m`](WorkingMemoryCapacity.m) script that alter the experiment. They can be found in the *Configuration of Experiment* section close to the top of the script.
 
-- **High-level settings**
-    + `nSquares`: Controls the number of squares per hemifield in the memory and test arrays. [Vogel & Machizawa (2004)](#vogel-machizawa) conducted multiple experiments with varying numbers of squares (i.e., 1, 2, 3, 4, 6, 8, 10)
+#### High-Level Settings
 
-    + `nTrials`: Number of trials to be conducted. [Vogel & Machizawa (2004)](#vogel-machizawa) had every subject complete 240 trials in each experiment.
+- `nSquares`: Controls the number of squares per hemifield in the memory and test arrays. [Vogel & Machizawa (2004)](#vogel-machizawa) conducted multiple experiments with varying numbers of squares (i.e., 1, 2, 3, 4, 6, 8, 10)
 
-    + `nPracticeTrials`: Number of (additional) trials that participants complete to familiarize themselves with the experiment.
+- `nTrials`: Number of trials to be conducted. [Vogel & Machizawa (2004)](#vogel-machizawa) had every subject complete 240 trials in each experiment.
 
-    + `viewingDistanceMM`: The orthogonal distance (in mm) from the eye of the participant to the screen used to display the stimuli. This value is used to convert stimuli sizes from degrees of visual angle to number of pixels on the screen. The screen resolution as well as the physical size of the display (in mm) necessary for this conversion are provided through a call to the `ConfigurePsych.m` function.
+- `nPracticeTrials`: Number of (additional) trials that participants complete to familiarize themselves with the experiment.
 
-    + `Progress.thresholdPct`: Controls when participants are informed about their progress. Thereby also splitting trials into blocks.
+- `viewingDistanceMM`: The orthogonal distance (in mm) from the eye of the participant to the screen used to display the stimuli. This value is used to convert stimuli sizes from degrees of visual angle to number of pixels on the screen. The screen resolution as well as the physical size of the display (in mm) necessary for this conversion are provided through a call to the `ConfigurePsych.m` function.
 
-- **Timing parameters**
-    + `Duration.stimOnsetAsyncMinSecs`: Parameter (lower bound) of the uniform distribution from which SOA is sampled (in seconds).
+- `Progress.thresholdPct`: Controls when participants are informed about their progress. Thereby also splitting trials into blocks.
 
-    + `Duration.stimOnsetAsyncMaxSecs`: Parameter (upper bound) of the uniform distribution from which SOA is sampled (in seconds).
+#### Timing parameters
 
-    + `Duration.arrowSecs`: Presentation duration (in seconds) of the arrow indicating the array of colored squares to memorize.
+- `Duration.stimOnsetAsyncMinSecs`: Parameter (lower bound) of the uniform distribution from which SOA is sampled (in seconds).
 
-    + `Duration.memoryArraySecs`: Presentation duration (in seconds) of the memory array.
+- `Duration.stimOnsetAsyncMaxSecs`: Parameter (upper bound) of the uniform distribution from which SOA is sampled (in seconds).
 
-    + `Duration.retentionIntervalSecs`: Duration (in seconds) of the retention interval between presentation of memory array and test array.
+- `Duration.arrowSecs`: Presentation duration (in seconds) of the arrow indicating the array of colored squares to memorize.
 
-    + `Duration.testArraySecs`: Presentation duration (in seconds) of the test array.
+- `Duration.memoryArraySecs`: Presentation duration (in seconds) of the memory array.
+
+- `Duration.retentionIntervalSecs`: Duration (in seconds) of the retention interval between presentation of memory array and test array.
+
+- `Duration.testArraySecs`: Presentation duration (in seconds) of the test array.
 
 ### Configuring Psychtoolbox
 
-The experiment code (i.e., the `WorkingMemoryCapacity.m` script) calls the `configurePsych.m` function to generate a struct called `Config`. The parameters of this struct are then used to set up a new Psychtoolbox session to run the experiment. You can change the way this session is set up by passing the appropriate arguments to the `configurePsych.m` function:
+The experiment code (i.e., the [`WorkingMemoryCapacity.m`](WorkingMemoryCapacity.m) script) calls the `configurePsych.m` function to generate a struct called `Config`. The parameters of this struct are then used to set up a new Psychtoolbox session to run the experiment. You can change the way this session is set up by passing the appropriate arguments to the `configurePsych.m` function:
 
 - `whichScreen`: Either 'main' or 'max'. Passing 'main' will set `Config.screenNumber` to 0 (i.e., main screen), 'max' will set it to `max(Screen('Screens'))` (i.e., screen detected last). Defaults to 'main'.
 
@@ -108,15 +121,25 @@ The experiment code (i.e., the `WorkingMemoryCapacity.m` script) calls the `conf
 
 - `debugMode`: Either `true` or `false`. If set to `true` (and `whichScreen` is set to 'main'), Psychtoolbox opens a window positioned in the top-left that only covers 25 % of the screen. Defaults to `false`.
 
+## Known Issues
+
+As of now, there are two known issues with the implementation of the experiment:
+
+1. **Size of stimuli**: To compute the size of the squares (in pixels) presented on screen[^3], we assume that every square is centered on the screen (which isn't the case). Technically, as objects of a fixed size in pixels move further into the periphery, their visual angle decreases. Conversely, if we want the visual angle to remain constant, we would have to alter the size of the squares in pixels depending on their precise location on the screen. This is currently not accounted for.
+
+2. **Randomization of stimuli positions**: The colored squares were presented "within two 4° x 7.3° rectangular regions that were centered 3° to the left and right of a central fixation cross" and their positions "were randomized on each trial, with the constraint that the distance between squares within a hemifield was at least 2° (centre to centre)" ([Vogel & Machizawa, 2004](#vogel-machizawa)). As of now, this particular randomization is not implemented very efficiently. As a result, randomization of stimuli positions only works (in a reasonable amount of time) for stimulus arrays of up to 6 squares each. For further details, see [`WorkingMemoryCapacity.m`](WorkingMemoryCapacity.m).
+
+[^3]: The size of the stimuli used in the experiments by [Vogel & Machizawa (2004)](#vogel-machizawa) was 0.65° by 0.65° of visual angle.
+
 ## References
 
-- <a id='brainard-ptb'></a> Brainard D. H. (1997). The Psychophysics Toolbox. *Spatial vision, 10*(4), 433–436.
+- <a id='brainard-ptb'></a> Brainard D. H. (1997). The Psychophysics Toolbox. *Spatial vision, 10*(4), 433–436. [https://doi.org/10.1163/156856897X00357](https://doi.org/10.1163/156856897X00357)
 
 - <a id='kleiner-ptb'></a> Kleiner, M., Brainard, D., & Pelli, D. (2007). What’s New in Psychtoolbox-3? *Perception 36*(14).
 
 - <a id='eeg-manylabs'></a> Pavlov, Y. G., Adamian, N., Appelhoff, S., Arvaneh, M., Benwell, C. S. Y., Beste, C., Bland, A. R., Bradford, D. E., Bublatzky, F., Busch, N. A., Clayson, P. E., Cruse, D., Czeszumski, A., Dreber, A., Dumas, G., Ehinger, B., Ganis, G., He, X., Hinojosa, J. A., … Mushtaq, F. (2021). #EEGManyLabs: Investigating the replicability of influential EEG experiments. *Cortex, 144,* 213–229. [https://doi.org/10.1016/j.cortex.2021.03.013](https://doi.org/10.1016/j.cortex.2021.03.013)
 
-- <a id='pelli-ptb'></a> Pelli D. G. (1997). The VideoToolbox software for visual psychophysics: transforming numbers into movies. *Spatial vision, 10*(4), 437–442.
+- <a id='pelli-ptb'></a> Pelli D. G. (1997). The VideoToolbox software for visual psychophysics: transforming numbers into movies. *Spatial vision, 10*(4), 437–442. [https://doi.org/10.1163/156856897X00366](https://doi.org/10.1163/156856897X00366)
 
 - <a id='matlab'></a> The MathWorks Inc. (2023). MATLAB version: 9.14.0 (R2023a), Natick, Massachusetts: The MathWorks Inc. [https://www.mathworks.com](https://www.mathworks.com)
 

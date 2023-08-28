@@ -201,10 +201,17 @@ Msg.errorInvalidSex = ...
     'Participant sex is not valid, expected one of m, w, d!';
 
 % Error message that is printed to the command window if an invalid
-% participant age was entered into the dialog box that is opened at the
+% year of birth was entered into the dialog box that is opened at the
 % beginning of the experiment
-Msg.errorInvalidAge = ...
-    'Participant age is not valid, expected a positive integer!';
+Msg.errorInvalidYoB = ...
+    'Participant''s year of birth is not valid, expected a positive integer!';
+
+% Error message that is printed to the command window if a participant ID
+% is chosen that already exists and the entered participant data does not
+% match previously entered data
+Msg.errorInvalidParticipantData = ['Participant data does not match ' ...
+    'previously entered data. Please enter the same data or choose a ' ...
+    'different ID!'];
 
 % Error message that is printed to the command window if participant ends
 % the experiment prematurely
@@ -355,6 +362,9 @@ clear arrLengthVA arrVertDisplacementPixels arrVertDisplacementVA ...
 %------------------------------------------------------------------
 %       TRIAL STRUCTURE & SETUP
 %------------------------------------------------------------------
+
+% Number of items per array
+Items = nSquares * ones(nTrials, 1);
 
 % NOTE: 'Order' will be used to randomize the order of trials
 Order = randperm(nTrials)';
@@ -508,9 +518,9 @@ end
 Response = string(NaN(nTrials, 1));
 
 % Combine all variables into a single table
-trials = table(Order, StimOnsetAsyncSecs, Hemifield, IdenticalArrays, ...
-    ColorsLeft, ColorsRight, XPosLeft, YPosLeft, XPosRight, YPosRight, ...
-    OddSquare, OddColor, Response);
+trials = table(Items, Order, StimOnsetAsyncSecs, Hemifield, ...
+    IdenticalArrays, ColorsLeft, ColorsRight, XPosLeft, YPosLeft, ...
+    XPosRight, YPosRight, OddSquare, OddColor, Response);
 
 % Randomize order of trials
 trials = sortrows(trials, 'Order');
@@ -530,13 +540,13 @@ trials.Order(nTrials+1:nTotalTrials) = 0;
 trials = sortrows(trials, 'Order');
 
 % Clean up workspace
-clear colorCodes ColorsLeft ColorsRight Hemifield IdenticalArrays ...
-    initColorOddSquare initColors isValidCoords minDistance nColors ...
-    OddColor OddSquare Order possibleColors practiceTrials printFreq ...
-    printFreqPct quartiles rectRegionLeft rectRegionRight Response ...
-    selectedColors StimOnsetAsyncSecs trialsComputed xLeft xLeftRange ...
-    XPosLeft XPosRight xRight xRightRange yLeft YPosLeft YPosRight ...
-    yRange yRight
+clear colorCodes colorCounts ColorsLeft ColorsRight Hemifield ...
+    IdenticalArrays initColorOddSquare initColors isValidCoords Items ...
+    minDistance nColors OddColor OddSquare Order possibleColors ...
+    practiceTrials printFreq printFreqPct quartiles rectRegionLeft ...
+    rectRegionRight Response selectedColors StimOnsetAsyncSecs ...
+    trialsComputed xLeft xLeftRange XPosLeft XPosRight xRight ...
+    xRightRange yLeft YPosLeft YPosRight yRange yRight
 
 
 %----------------------------------------------------------------------
@@ -546,7 +556,7 @@ clear colorCodes ColorsLeft ColorsRight Hemifield IdenticalArrays ...
 % Record some basic data of our participant using a dialog box
 prompt = {'Participant ID (1 - 999):', ...
     'Please enter your sex (m/w/d):', ...
-    'Please enter your age:'};
+    'Please enter your year of birth:'};
 dlgtitle = 'Participant Data';
 dims = [1, 40];
 answer = inputdlg(prompt, dlgtitle, dims);
@@ -558,8 +568,8 @@ end
 
 % Store input in struct 'Participant'
 Participant.id = str2double(answer{1});
-Participant.sex = answer{2};
-Participant.age = str2double(answer{3});
+Participant.sex = upper(answer{2});
+Participant.yob = str2double(answer{3});
 
 % Ensure that the data provided by the participant is valid
 %   a) Check participant ID (expected to be integer between 1 and 999)
@@ -567,31 +577,54 @@ assert(isnumeric(Participant.id) && isreal(Participant.id) && ...
     isfinite(Participant.id) && mod(Participant.id, 1) == 0 && ...
     1 <= Participant.id && Participant.id <= 999, Msg.errorInvalidID);
 
-%   b) Check participant sex (expected to be one of 'm', 'w', 'd')
-assert(ismember(Participant.sex, {'m', 'w', 'd'}), ...
+%   b) Check participant sex (expected to be one of 'M', 'W', 'D')
+assert(ismember(Participant.sex, {'M', 'W', 'D'}), ...
     Msg.errorInvalidSex);
 
-%   c) Check participant age (expected to be positive integer)
-assert(isnumeric(Participant.age) && isreal(Participant.age) && ...
-    isfinite(Participant.age) && mod(Participant.age, 1) == 0 && ...
-    Participant.age > 0, Msg.errorInvalidAge);
+%   c) Check participant's year of birth (expected to be positive integer)
+assert(isnumeric(Participant.yob) && isreal(Participant.yob) && ...
+    isfinite(Participant.yob) && mod(Participant.yob, 1) == 0 && ...
+    Participant.yob > 0, Msg.errorInvalidYoB);
 
-% We use the above information to create a unique filename to store the
-% results of the experiment
-Participant.id = sprintf('%03d', Participant.id);
-t = datetime("now", "Format", "MM-dd-yyyy_HHmm");
-filename = upper( ...
-    [Participant.id, '_', Participant.sex, num2str(Participant.age), ...
-    '_', char(t)]);
-filename = fullfile('data', [filename, '.csv']);
+% Convert ID to nicely formatted string (e.g., the number 1 will be
+% converted to the string "001") and store participant data in table
+Participant.id = string(sprintf('%03d', Participant.id));
+participantData = table( ...
+    Participant.id, string(Participant.sex), Participant.yob, ...
+    'VariableNames', ["ID", "Sex", "YearOfBirth"]);
 
-% Make sure that subdirectoy 'data' exists
-if ~isfolder('data')
-    mkdir data
+% Make sure that subdirectoy 'data/participants' exists
+% NOTE: This will also work if the directory 'data' does not yet exist.
+if ~isfolder(fullfile('data', 'participants'))
+    mkdir(fullfile('data', 'participants'))
 end
 
+% Construct filename
+filename = fullfile('data', 'participants', Participant.id + ".csv");
+
+% If participant ID already exists, make sure that entered participant data
+% coincides with previously entered data, else create a new file
+if isfile(filename)
+    prevParticipantData = readtable(filename);
+    identicalSex = strcmp(participantData.Sex, prevParticipantData.Sex);
+    identicalYoB = ...
+        participantData.YearOfBirth == prevParticipantData.YearOfBirth;
+    if ~(identicalSex && identicalYoB)
+        error(Msg.errorInvalidParticipantData);
+    end
+else
+    writetable(participantData, filename, 'Delimiter', ',');
+end
+
+% Create filename to store the results of the experiment
+t = datetime("now", "Format", "yyyy-MM-dd");
+filePattern = Participant.id + "_" + sprintf('%02d', nSquares) ...
+    + "-ITEMS_" + string(t) + "_v%d";
+filePattern = fullfile("data", filePattern + ".csv");
+
 % Clean up workspace
-clear answer dims dlgtitle prompt t
+clear answer dims dlgtitle identicalSex identicalYoB ...
+    prevParticipantData prompt t
 
 
 %----------------------------------------------------------------------
@@ -929,11 +962,26 @@ try
 %       SAVE DATA & SHUT DOWN
 %------------------------------------------------------------------
 
+    % Make sure that filename is unique
+    counter = 1;
+    while true
+        filename = sprintf(filePattern, counter);
+        if ~isfile(filename)
+            break
+        else
+            counter = counter + 1;
+        end
+    end
+
+    % Save data
     writetable(trials, filename, 'Delimiter', ',');
 
     % Turn off character listening, re-enable keyboard input and close all
     % open screens
     endExperiment();
+
+    % Clean up workspace
+    clear counter filePattern
 
 
 %----------------------------------------------------------------------
@@ -941,17 +989,29 @@ try
 %----------------------------------------------------------------------
 
 catch errorMessage
-    % We indicate that the stored data is incomplete by appending '_ERROR'
-    % to the name of the file we save
-    filename = strrep(filename, '.csv', '_ERROR.csv');
+    % Indicate that the collected data is incomplete
+    filePattern = strrep(filePattern, 'data/', 'data/INCOMPLETE_');
+
+    % Make sure that filename is unique
+    counter = 1;
+    while true
+        filename = sprintf(filePattern, counter);
+        if ~isfile(filename)
+            break
+        else
+            counter = counter + 1;
+        end
+    end
+
+    % Save data
     writetable(trials, filename, 'Delimiter', ',');
 
     % Clean up workspace
     clear allColorCodes allColorsMemory allColorsTest allSquares ans ...
-        iSquare isResponseGiven iTrial keyCode nPracticeTrials ...
-        nTotalTrials nTrials oddColor oddColorCode oddSquare response ...
-        secs squareCoords stimOnsetAsyncFrames stimOnsetAsyncSecs ...
-        stimulusOnsetTime timeElapsed
+        counter filePattern iSquare isResponseGiven iTrial keyCode ...
+        nPracticeTrials nTotalTrials nTrials oddColor oddColorCode ...
+        oddSquare response secs squareCoords stimOnsetAsyncFrames ...
+        stimOnsetAsyncSecs stimulusOnsetTime timeElapsed
 
     % Turn off character listening, re-enable keyboard input and close all
     % open screens

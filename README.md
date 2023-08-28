@@ -125,9 +125,7 @@ The experiment code (i.e., the [`WorkingMemoryCapacity.m`](WorkingMemoryCapacity
 ## Data Analysis
 
 The [`analyzeData.m`](analyzeData.m) script can be used to analyze data collected via the [`WorkingMemoryCapacity.m`](WorkingMemoryCapacity.m) script. To do so, simply run the [`analyzeData.m`](analyzeData.m) script from the command window while in the cloned repository's directory. This computes the estimated visual working memory capacity for each valid dataset in the `data/` directory using the formula
-$$
-K = S \times (H - F)\,,
-$$
+$$K = S \times (H - F),$$
 where $K$ is the estimated capacity, $S$ is the number of items in each array, $H$ is the hit rate, and $F$ is the false alarm rate. For the logic behind this formula, see ([Vogel & Machizawa, 2004](#vogel-machizawa)).
 
 ## Known Issues

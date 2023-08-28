@@ -58,7 +58,7 @@ clear pat
 varNames = ["ParticipantID", "Items", "Trials", "HitRate", ...
     "FalseAlarmRate", "Capacity"];
 
-varTypes = ["string", "double", "double", "double", "double", "double"];
+varTypes = ["double", "double", "double", "double", "double", "double"];
 
 analyzedData = table('Size', [nDatasets, length(varNames)], ...
     'VariableTypes', varTypes, 'VariableNames', varNames);
@@ -74,7 +74,7 @@ for iDataset = 1:nDatasets
     results = results(validTrials, :);
 
     % Collect metadata
-    participantID = string(extractBefore(fileName, '_'));
+    participantID = str2double(extractBefore(fileName, '_'));
     nItems = str2double(cell2mat(extractBetween(fileName, '_', '-ITEMS')));
 
     % Analyze data
@@ -98,6 +98,10 @@ for iDataset = 1:nDatasets
         hitRate, falseAlarmRate, capacity);
 end
 
+% Sort table
+analyzedData = sortrows( ...
+    analyzedData, ["ParticipantID", "Items"], "ascend");
+
 % Clean up workspace
 clear capacity falseAlarmRate fileName filePath hitRate iDataset ...
     nCorrectRejects nDifferent nFalseAlarms nHits nIdentical nItems ...
@@ -108,6 +112,6 @@ clear capacity falseAlarmRate fileName filePath hitRate iDataset ...
 %   DISPLAY RESULTS
 %----------------------------------------------------------------------
 
-% Clear command window and print results
+% Clear command window and display results
 clc
 disp(analyzedData);

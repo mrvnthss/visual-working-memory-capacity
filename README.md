@@ -14,6 +14,7 @@ This repository contains [MATLAB](#matlab) code that replicates[^1] a visual wor
 - [Results by Vogel & Machizawa (2004)](#results-by-vogel--machizawa-2004)
 - [Getting Started](#getting-started)
 - [Configuring the Experiment](#configuring-the-experiment)
+- [Data Analysis](#data-analysis)
 - [Known Issues](#known-issues)
 - [References](#references)
 - [Acknowledgments](#acknowledgments)
@@ -120,6 +121,14 @@ The experiment code (i.e., the [`WorkingMemoryCapacity.m`](WorkingMemoryCapacity
 - `skipTest`: Either 0 or 1. Assigned to the field `Config.skipTest` which is used to determine whether synchronization tests are to be skipped. A value of 1 will skip the internal synchronization tests, a value of 0 will not. Defaults to 1.
 
 - `debugMode`: Either `true` or `false`. If set to `true` (and `whichScreen` is set to 'main'), Psychtoolbox opens a window positioned in the top-left that only covers 25 % of the screen. Defaults to `false`.
+
+## Data Analysis
+
+The [`analyzeData.m`](analyzeData.m) script can be used to analyze data collected via the [`WorkingMemoryCapacity.m`](WorkingMemoryCapacity.m) script. To do so, simply run the [`analyzeData.m`](analyzeData.m) script from the command window while in the cloned repository's directory. This computes the estimated visual working memory capacity for each valid dataset in the `data/` directory using the formula
+$$
+K = S \times (H - F)\,,
+$$
+where $K$ is the estimated capacity, $S$ is the number of items in each array, $H$ is the hit rate, and $F$ is the false alarm rate. For the logic behind this formula, see ([Vogel & Machizawa, 2004](#vogel-machizawa)).
 
 ## Known Issues
 

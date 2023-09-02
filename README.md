@@ -28,9 +28,10 @@ To arrive at these results, [Vogel & Machizawa (2004)](#vogel-machizawa) had the
 
 <div align="center">
     <img src="figures/trial-structure.png" alt="trial-structure" width="800">
-    <p><b>Note:</b> To properly see all parts of the image, you need to use a light theme in GitHub.
-        <br>You can change GitHub's appearance under <i>Settings &rarr; Appearance</i>.</p>
+    <p>Schematic flow of a single trial.<br>
+        Size of stimuli has been increased for demonstration purposes.</p>
 </div>
+<br>
 
 Additionally, here is a dynamic preview[^2] of the experiment:
 

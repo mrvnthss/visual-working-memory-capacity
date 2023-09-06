@@ -618,8 +618,8 @@ end
 
 % Create filename to store the results of the experiment
 t = datetime("now", "Format", "yyyy-MM-dd");
-filePattern = Participant.id + "_" + sprintf('%02d', nSquares) ...
-    + "-ITEMS_" + string(t) + "_v%d";
+filePattern = Participant.id + sprintf('_%02d-ITEMS_', nSquares) ...
+    + string(t) + "_v%d";
 filePattern = fullfile("data", filePattern + ".csv");
 
 % Clean up workspace

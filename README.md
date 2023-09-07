@@ -125,19 +125,27 @@ The experiment code (i.e., the [`WorkingMemoryCapacity.m`](WorkingMemoryCapacity
 
 ## Data Analysis
 
-The [`analyzeData.m`](analyzeData.m) script can be used to analyze data collected via the [`WorkingMemoryCapacity.m`](WorkingMemoryCapacity.m) script. To do so, simply run the [`analyzeData.m`](analyzeData.m) script from the command window while in the cloned repository's directory. This computes the estimated visual working memory capacity for each valid dataset in the `data/` directory using the formula
+The [`analyzeData.m`](analyzeData.m) script can be used to analyze data collected via the [`WorkingMemoryCapacity.m`](WorkingMemoryCapacity.m) script. To do so, simply run the [`analyzeData.m`](analyzeData.m) script from the command window while in the cloned repository's directory. This computes the hit rate, the false alarm rate, and the estimated visual working memory capacity for each valid dataset in the `data/` directory using the formula
 $$K = S \times (H - F),$$
-where $K$ is the estimated capacity, $S$ is the number of items in each array, $H$ is the hit rate, and $F$ is the false alarm rate. For the logic behind this formula, see (Vogel & Machizawa, [2004](#vogel-machizawa)).
+where $K$ is the estimated capacity, $S$ is the number of items in each array, $H$ is the hit rate, and $F$ is the false alarm rate. For the logic behind this formula, see (Vogel & Machizawa, [2004](#vogel-machizawa)). The results are stored in a table named `analyzedData` and are printed to the command window upon execution.
+
+For example, when run with only the sample dataset provided in this repository, the [`analyzeData.m`](analyzeData.m) script will produce and print the following table[^3]:
+
+<div align="center">
+    <img src="figures/sample-results.png" alt="sample-results" width="600">
+</div>
+
+[^3]: The reason for there being only 239 trials is simply that I did not respond quickly enough in one of the 240 trials.
 
 ## Known Issues
 
 As of now, there are two known issues with the implementation of the experiment:
 
-1. **Size of stimuli**: To compute the size of the squares (in pixels) presented on screen[^3], we assume that every square is centered on the screen (which isn't the case). Technically, as objects of a fixed size in pixels move further into the periphery, their visual angle decreases. Conversely, if we want the visual angle to remain constant, we would have to alter the size of the squares in pixels depending on their precise location on the screen. This is currently not accounted for.
+1. **Size of stimuli**: To compute the size of the squares (in pixels) presented on screen[^4], we assume that every square is centered on the screen (which isn't the case). Technically, as objects of a fixed size in pixels move further into the periphery, their visual angle decreases. Conversely, if we want the visual angle to remain constant, we would have to alter the size of the squares in pixels depending on their precise location on the screen. This is currently not accounted for.
 
 2. **Randomization of stimuli positions**: The colored squares were presented "within two 4° x 7.3° rectangular regions that were centered 3° to the left and right of a central fixation cross" and their positions "were randomized on each trial, with the constraint that the distance between squares within a hemifield was at least 2° (centre to centre)" (Vogel & Machizawa, [2004](#vogel-machizawa)). As of now, this particular randomization is not implemented efficiently. As a result, randomization of stimuli positions only works (in a reasonable amount of time) for stimulus arrays of up to 6 squares each. For further details, see [`WorkingMemoryCapacity.m`](WorkingMemoryCapacity.m).
 
-[^3]: The size of the stimuli used in the experiments by Vogel & Machizawa ([2004](#vogel-machizawa)) was 0.65° by 0.65° of visual angle.
+[^4]: The size of the stimuli used in the experiments by Vogel & Machizawa ([2004](#vogel-machizawa)) was 0.65° by 0.65° of visual angle.
 
 ## References
 

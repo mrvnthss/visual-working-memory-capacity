@@ -92,7 +92,7 @@ end
 % NOTE: The function 'mustBeEqualLength' assumes that the two inputs 'a'
 % and 'b' are vectors.
 function mustBeEqualLength(a, b)
-% MUSTBEEQUALLENGTH - Ensure that two vectors are of equal length
+% MUSTBEEQUALLENGTH - Validate that two vectors are of equal length
 isSameLength = length(a) == length(b);
 isSingleton = min(length(a), length(b)) == 1;
 
@@ -100,7 +100,7 @@ if ~(isSameLength || isSingleton)
     eidType = 'mustBeEqualSize:notEqualSize';
     msgType = ['Size of input must equal size of remaining inputs' ...
         ' or input size must be 1x1.'];
-    throwAsCaller(MException(eidType, msgType))
+    throwAsCaller(MException(eidType, msgType));
 end
 
 end
@@ -112,7 +112,7 @@ end
 % 'offsetMM' must equal 0!  If 'mode' is "oneSided", 'visualAngle' must be
 % less than 90.
 function mustBeValidCombo(mode, visualAngle, offsetMM)
-% MUSTBEVALIDCOMBO - Ensure compatibility of arguments
+% MUSTBEVALIDCOMBO - Validate compatibility of arguments
 
 % NOTE: We know that all arguments are either of the same length or of size
 % 1x1.  We now make sure that they are actually the same length, b/c we'll
@@ -139,12 +139,12 @@ if ~modeAndVisualAngleCompatible
     msgType = "Arguments 'mode' and 'visualAngle' not compatible! " + ...
         "Whenever 'mode' is set to ""oneSided"", 'visualAngle' must " + ...
         "be less than 90!";
-    throwAsCaller(MException(eidType, msgType))
+    throwAsCaller(MException(eidType, msgType));
 elseif ~modeAndOffsetCompatible
     eidType = 'mustBeValidCombo:invalidCombo';
     msgType = "Arguments 'mode' and 'offsetMM' not compatible! " + ...
         "Whenever 'mode' is set to ""centered"", 'offsetMM' must equal 0!";
-    throwAsCaller(MException(eidType, msgType))
+    throwAsCaller(MException(eidType, msgType));
 end
 
 end

@@ -74,6 +74,18 @@ nTrials = 240;
 % Number of practice trials
 nPracticeTrials = 10;
 
+% Set range to be used for the SOA (values are the ones used by Vogel &
+% Machizawa (2004))
+Duration.stimOnsetAsyncMinSecs = 0.3;  % in secs
+Duration.stimOnsetAsyncMaxSecs = 0.4;  % in secs
+
+% Set remaining timing parameters for the experiment (again, values are the
+% ones used by Vogel & Machizawa (2004))
+Duration.arrowSecs = 0.2;              % in secs
+Duration.memoryArraySecs = 0.1;        % in secs
+Duration.retentionIntervalSecs = 0.9;  % in secs
+Duration.testArraySecs = 2;            % in secs
+
 % (Orthogonal) distance from eye to screen in mm
 % NOTE: This depends heavily on the setup (chair, desk, laptop vs. external
 % monitor, etc.) that's being used.  With my setup, I measured the
@@ -92,18 +104,6 @@ viewingDistanceMM = 550;  % in mm
 % the value of 'Progress.thresholdPct' should be chosen reasonably.
 % Sensible choices would be 5 %, 10 %, 20 % or 25 %.
 Progress.thresholdPct = 10;  % in pct
-
-% Set range to be used for the SOA (values are the ones used by Vogel &
-% Machizawa (2004))
-Duration.stimOnsetAsyncMinSecs = 0.3;  % in secs
-Duration.stimOnsetAsyncMaxSecs = 0.4;  % in secs
-
-% Set remaining timing parameters for the experiment (again, values are the
-% ones used by Vogel & Machizawa (2004))
-Duration.arrowSecs = 0.2;              % in secs
-Duration.memoryArraySecs = 0.1;        % in secs
-Duration.retentionIntervalSecs = 0.9;  % in secs
-Duration.testArraySecs = 2;            % in secs
 
 % Set text size, font, and color
 % NOTE: This script was developed on a 16" laptop.  For laptops of

@@ -87,17 +87,13 @@ git clone https://github.com/mrvnthss/visual-working-memory-capacity
 
 There are several parameters that can be changed in the [`WorkingMemoryCapacity.m`](WorkingMemoryCapacity.m) script that alter the experiment. They can be found in the *Configuration of Experiment* section close to the top of the script.
 
-#### High-Level Settings
+#### Experimental Design
 
-- `nSquares`: Controls the number of squares per hemifield in the memory and test arrays. Vogel & Machizawa ([2004](#vogel-machizawa)) conducted multiple experiments with varying numbers of squares (i.e., 1, 2, 3, 4, 6, 8, 10).
+- `nSquares`: Controls the number of squares per hemifield in the memory and test arrays. Vogel & Machizawa ([2004](#vogel-machizawa)) conducted multiple experiments with varying numbers of squares (i.e., 1, 2, 3, 4, 6, 8, and 10).
 
 - `nTrials`: Number of trials to be conducted. Vogel & Machizawa ([2004](#vogel-machizawa)) had every subject complete 240 trials in each experiment.
 
 - `nPracticeTrials`: Number of (additional) trials that participants complete to familiarize themselves with the experiment.
-
-- `viewingDistanceMM`: The orthogonal distance (in mm) from the eye of the participant to the screen used to display the stimuli. This value is used to convert stimuli sizes from degrees of visual angle to number of pixels on the screen. The screen resolution as well as the physical size of the display (in mm) necessary for this conversion are provided through a call to the [`ConfigurePsych.m`](configurePsych.m) function.
-
-- `Progress.thresholdPct`: Controls when participants are informed about their progress. Thereby also splitting trials into blocks.
 
 #### Timing parameters
 
@@ -112,6 +108,12 @@ There are several parameters that can be changed in the [`WorkingMemoryCapacity.
 - `Duration.retentionIntervalSecs`: Duration (in seconds) of the retention interval between presentation of memory array and test array.
 
 - `Duration.testArraySecs`: Presentation duration (in seconds) of the test array.
+
+#### Other
+
+- `viewingDistanceMM`: The orthogonal distance (in mm) from the eye of the participant to the screen used to display the stimuli. This value is used to convert stimuli sizes from degrees of visual angle to number of pixels on the screen. The screen resolution as well as the physical size of the display (in mm) necessary for this conversion are provided through a call to the [`ConfigurePsych.m`](configurePsych.m) function.
+
+- `Progress.thresholdPct`: Controls when (i.e., after which fraction of total trials) participants are informed about their progress. Thereby also splitting trials into blocks.
 
 ### Configuring Psychtoolbox
 

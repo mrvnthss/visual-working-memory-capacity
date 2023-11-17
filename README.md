@@ -1,8 +1,8 @@
 # Visual Working Memory Capacity
 
-![Static Badge](https://img.shields.io/badge/MATLAB-9.14_(2023a)-%233464e3)
-![Static Badge](https://img.shields.io/badge/Psychtoolbox-3.0.19-%233464e3)
-![GitHub](https://img.shields.io/github/license/mrvnthss/brightness-discrimination-2afc?color=%2342ffd1)
+![Static Badge](https://img.shields.io/badge/MATLAB-9.14_(2023a)-e86e05)
+![Static Badge](https://img.shields.io/badge/Psychtoolbox-3.0.19-520b57)
+![GitHub](https://img.shields.io/github/license/mrvnthss/visual-working-memory-capacity?color=9a2333)
 
 This repository contains MATLAB (The MathWorks Inc., [2023](#matlab)) code that replicates[^1] a visual working memory capacity experiment by Vogel & Machizawa ([2004](#vogel-machizawa)). This experiment is part of [#EEGManyLabs](https://osf.io/yb3pq/), a large-scale effort by an international collaboration of researchers "to directly test the replicability of key findings from 20 of these [most influential and continually cited] studies [in the field of EEG research] in teams of at least three independent laboratories" (Pavlov et al., [2021](#eeg-manylabs)). The implementation provided here is based on the [Psychtoolbox](http://psychtoolbox.org/) library (Brainard, [1997](#brainard-ptb); Kleiner et al., [2007](#kleiner-ptb); Pelli, [1997](#pelli-ptb)).
 

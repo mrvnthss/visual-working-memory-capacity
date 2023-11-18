@@ -30,7 +30,7 @@ To arrive at these results, Vogel & Machizawa ([2004](#vogel-machizawa)) had the
 <div align="center">
     <img src="figures/trial-structure.png" alt="trial-structure" width="800">
     <p>Schematic flow of a single trial.<br>
-        Size of stimuli has been increased for demonstration purposes.</p>
+    Size of stimuli has been increased for demonstration purposes.</p>
 </div>
 <br>
 

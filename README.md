@@ -28,7 +28,7 @@ In their study, Vogel & Machizawa ([2004](#vogel-machizawa)) provide evidence fo
 To arrive at these results, Vogel & Machizawa ([2004](#vogel-machizawa)) had their subjects complete the following visual working memory task: On each trial, participants were briefly shown a bilateral array of colored squares. Subjects had to memorize the items from only one of the two hemifields, which was indicated with an arrow prior to the onset of the memory array. After a retention interval spanning 900 ms, "memory was tested (...) with the presentation of a test array that was either identical to the memory array or differed by one colour" (Vogel & Machizawa, [2004](#vogel-machizawa)). To indicate whether the two arrays were identical or different, subjects pressed one of two buttons. This flow of the experiment is summarized in the following figure:
 
 <div align="center">
-    <img src="figures/trial-structure.png" alt="trial-structure" width="800">
+    <img src="figures/trial-structure.png" alt="trial-structure" width="700">
     <p>Schematic flow of a single trial.<br>
     Size of stimuli has been increased for demonstration purposes.</p>
 </div>
